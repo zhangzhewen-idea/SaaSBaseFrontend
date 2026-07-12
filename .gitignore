@@ -35,3 +35,11 @@ build/
 
 ### Git worktrees ###
 .worktrees/
+
+### Frontend ###
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.superpowers/
