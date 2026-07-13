@@ -1,0 +1,11 @@
+:root {
+  --color-brand-500: #3f6fe0;
+  --color-brand-700: #2952a3;
+  --color-brand-950: #0b1f3a;
+  --color-bg: #f7f9fc;
+  --color-surface: #ffffff;
+  --color-border: #dbe3f0;
+  --color-text: #132033;
+  --color-text-weak: #5c6d85;
+  --radius-md: 12px;
+}
