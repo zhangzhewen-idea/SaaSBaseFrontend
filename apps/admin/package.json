@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:e2e": "vitest run --passWithNoTests tests/e2e"
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@saasbase/shared": "workspace:*",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "@playwright/test": "1.61.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/test-utils": "^2.4.6",
     "jsdom": "^27.0.0",
