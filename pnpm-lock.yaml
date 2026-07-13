@@ -32,6 +32,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@saasbase/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       element-plus:
         specifier: ^2.8.8
         version: 2.14.3(vue@3.5.39(typescript@5.8.3))
