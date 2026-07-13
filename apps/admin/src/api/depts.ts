@@ -31,6 +31,7 @@ export interface DepartmentMember {
   departmentId: string
   userName: string
   roleName: string
+  status?: 'active' | 'disabled'
   joinedAt: string
 }
 

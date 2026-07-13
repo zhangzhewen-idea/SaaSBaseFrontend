@@ -4,9 +4,9 @@
       <div>
         <p class="eyebrow">Departments</p>
         <h2>部门管理</h2>
-        <p class="lead">支持部门树、成员列表与成员动作占位，后续可以直接替换为真实后端接口数据。</p>
+        <p class="lead">支持部门树、成员列表与最小成员动作，保持和管理端统一的克制风格。</p>
       </div>
-      <button class="primary" type="button" @click="handleReload">刷新树</button>
+      <button class="primary" type="button" @click="handleReload">刷新</button>
     </header>
 
     <div class="grid">
@@ -16,12 +16,18 @@
           <span>{{ state.tree.length }} 个根节点</span>
         </div>
 
-        <p v-if="state.loading" class="hint">正在加载部门树...</p>
+        <p v-if="state.treeLoading" class="hint">正在加载部门树...</p>
         <p v-else-if="state.error" class="error">{{ state.error }}</p>
         <ul v-else class="tree">
-          <li v-for="node in state.tree" :key="node.id">
-            <button type="button" @click="handleLoadMembers(node.id)">
-              {{ node.name }} <span>({{ node.memberCount }})</span>
+          <li v-for="row in treeRows" :key="row.id" class="tree-item" :style="{ paddingLeft: `${row.level * 16}px` }">
+            <button
+              type="button"
+              class="tree-button"
+              :class="{ active: row.id === state.selectedDepartmentId }"
+              @click="handleSelectDepartment(row)"
+            >
+              <span>{{ row.name }}</span>
+              <span>{{ row.memberCount }}</span>
             </button>
           </li>
         </ul>
@@ -29,17 +35,21 @@
 
       <section class="card panel">
         <div class="panel-head">
-          <strong>成员列表</strong>
+          <div>
+            <strong>成员列表</strong>
+            <p class="subtle">{{ state.selectedDepartmentName || '请选择一个部门' }}</p>
+          </div>
           <span>{{ state.total }} 条记录</span>
         </div>
 
-        <p v-if="state.loading" class="hint">正在加载成员列表...</p>
+        <p v-if="state.memberLoading" class="hint">正在加载成员列表...</p>
         <p v-else-if="state.error" class="error">{{ state.error }}</p>
         <table v-else-if="state.members.length > 0">
           <thead>
             <tr>
               <th>姓名</th>
               <th>角色</th>
+              <th>状态</th>
               <th>加入时间</th>
               <th>操作</th>
             </tr>
@@ -48,9 +58,14 @@
             <tr v-for="member in state.members" :key="member.id">
               <td>{{ member.userName }}</td>
               <td>{{ member.roleName }}</td>
+              <td>
+                <span class="status" :data-status="member.status">
+                  {{ member.status === 'disabled' ? '停用' : '启用' }}
+                </span>
+              </td>
               <td>{{ member.joinedAt }}</td>
               <td>
-                <button type="button" @click="handleRemove(member)">移除</button>
+                <button type="button" class="ghost" @click="handleRemove(member)">移除</button>
               </td>
             </tr>
           </tbody>
@@ -62,11 +77,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+
+import type { DepartmentNode } from '@/api'
 
 import { useDepartmentsModule } from './useDepartmentsModule'
 
-const { state, loadTree, loadMembers, removeMember } = useDepartmentsModule()
+const { state, loadTree, loadMembers, removeMember, selectDepartment } = useDepartmentsModule()
+
+const treeRows = computed(() => flattenDepartmentTree(state.tree))
 
 onMounted(() => {
   void loadTree()
@@ -76,12 +95,20 @@ function handleReload(): void {
   void loadTree()
 }
 
-function handleLoadMembers(id: string): void {
-  void loadMembers(id)
+function handleSelectDepartment(node: DepartmentNode): void {
+  selectDepartment(node)
+  void loadMembers(node.id)
 }
 
 function handleRemove(member: { departmentId: string; id: string }): void {
   void removeMember(member.departmentId, member.id)
+}
+
+function flattenDepartmentTree(nodes: DepartmentNode[], level = 0): Array<DepartmentNode & { level: number }> {
+  return nodes.flatMap(node => [
+    { ...node, level },
+    ...flattenDepartmentTree(node.children ?? [], level + 1)
+  ])
 }
 </script>
 
@@ -144,7 +171,14 @@ function handleRemove(member: { departmentId: string; id: string }): void {
 .panel-head {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   color: var(--color-text-weak);
+}
+
+.subtle {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
 }
 
 .tree {
@@ -155,7 +189,11 @@ function handleRemove(member: { departmentId: string; id: string }): void {
   list-style: none;
 }
 
-.tree button,
+.tree-item {
+  display: block;
+}
+
+.tree-button,
 button {
   min-height: 40px;
   border: 0;
@@ -165,15 +203,45 @@ button {
   font: inherit;
 }
 
-.tree button {
+.tree-button {
   width: 100%;
-  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: #f6f8fc;
+  color: var(--color-text);
 }
 
 .primary {
   background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700));
   color: white;
+}
+
+.tree-button.active {
+  background: rgba(58, 92, 255, 0.12);
+  color: var(--color-brand-700);
+  font-weight: 600;
+}
+
+.ghost {
+  background: #f6f8fc;
+  color: var(--color-text);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2450d4;
+  font-size: 0.85rem;
+}
+
+.status[data-status='disabled'] {
+  background: #f2f4f7;
+  color: #667085;
 }
 
 table {
