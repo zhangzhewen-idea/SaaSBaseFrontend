@@ -1,6 +1,7 @@
 import type { UserDetail, UserListQuery, UserRole, UserStatus, UserSummary } from '@/api'
 
 export type { UserDetail, UserListQuery, UserRole, UserStatus, UserSummary }
+export type { UserListRequestQuery } from '@/api'
 
 export interface UserListFilters {
   keyword: string

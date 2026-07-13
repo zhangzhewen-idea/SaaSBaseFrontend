@@ -40,14 +40,32 @@ export interface UserResetPasswordPayload {
   password: string
 }
 
-export function mapUserListQuery(query: UserListQuery): Record<string, string | number> {
+export interface UserListRequestQuery extends Record<string, string | number | boolean | null | undefined> {
+  pageNo: number
+  pageSize: number
+  keyword?: string
+  status?: UserStatus
+  role?: UserRole
+  departmentId?: string
+}
+
+export const DEFAULT_USER_LIST_QUERY: Readonly<UserListQuery> = Object.freeze({
+  page: 1,
+  pageSize: 20,
+  keyword: '',
+  status: undefined,
+  role: undefined,
+  departmentId: ''
+})
+
+export function mapUserListQuery(query: UserListQuery): UserListRequestQuery {
   return {
-    page: query.page,
+    pageNo: query.page,
     pageSize: query.pageSize,
-    keyword: query.keyword ?? '',
-    status: query.status ?? '',
-    role: query.role ?? '',
-    departmentId: query.departmentId ?? ''
+    keyword: query.keyword || undefined,
+    status: query.status,
+    role: query.role,
+    departmentId: query.departmentId || undefined
   }
 }
 
