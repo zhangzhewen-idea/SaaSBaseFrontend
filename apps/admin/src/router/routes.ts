@@ -2,6 +2,9 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { AdminLayout } from '../layouts'
 import DashboardHome from '../modules/dashboard/DashboardHome.vue'
+import UserManagementView from '../modules/users/UserManagementView.vue'
+import DepartmentManagementView from '../modules/depts/DepartmentManagementView.vue'
+import { LoginView } from '../modules/auth'
 import { ForbiddenPage, NotFoundPage } from '../modules/system'
 
 export const routes: RouteRecordRaw[] = [
@@ -20,12 +23,12 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: 'users',
-        component: () => import('../modules/dashboard/DashboardHome.vue'),
+        component: UserManagementView,
         meta: { title: '用户管理', requiredPermission: 'tenant-user:view' }
       },
       {
         path: 'departments',
-        component: () => import('../modules/dashboard/DashboardHome.vue'),
+        component: DepartmentManagementView,
         meta: { title: '部门管理', requiredPermission: 'tenant-department:view' }
       },
       {
@@ -37,7 +40,7 @@ export const routes: RouteRecordRaw[] = [
   },
   {
     path: '/login',
-    component: () => import('../modules/dashboard/DashboardHome.vue'),
+    component: LoginView,
     meta: { title: '登录', publicAccess: true }
   },
   {
