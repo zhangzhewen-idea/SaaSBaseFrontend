@@ -4,15 +4,22 @@
       <div>
         <p class="eyebrow">Users</p>
         <h2>用户管理</h2>
-        <p class="lead">支持按关键词、角色、状态和部门筛选，动作层预留了查看、停用和重置密码入口。</p>
+        <p class="lead">支持按用户名、部门、状态和手机号筛选，详情通过弹窗查看。</p>
       </div>
-      <button class="primary" type="button" @click="handleReload">刷新列表</button>
+      <div class="header-actions">
+        <button class="secondary" type="button" @click="handleResetFilters">重置</button>
+        <button class="primary" type="button" @click="handleReload">刷新列表</button>
+      </div>
     </header>
 
     <div class="filters card">
       <label>
-        关键词
+        用户名
         <input v-model="keyword" type="text" placeholder="用户名、姓名、手机号" />
+      </label>
+      <label>
+        部门
+        <input v-model="departmentId" type="text" placeholder="部门 ID" />
       </label>
       <label>
         状态
@@ -30,10 +37,6 @@
           <option value="tenant-admin">租户管理员</option>
           <option value="tenant-member">租户成员</option>
         </select>
-      </label>
-      <label>
-        部门 ID
-        <input v-model="departmentId" type="text" placeholder="部门 ID" />
       </label>
       <button class="secondary" type="button" @click="handleSearch">查询</button>
     </div>
@@ -68,36 +71,51 @@
             <td>{{ statusLabel(item.status) }}</td>
             <td>{{ item.departmentId ?? '-' }}</td>
             <td>{{ item.updatedAt }}</td>
-            <td>
+            <td class="actions">
               <button type="button" @click="handleView(item.id)">详情</button>
-              <button type="button" @click="handleToggleStatus(item)">切换状态</button>
+              <button type="button" @click="handleToggleStatus(item)">
+                {{ item.status === 'active' ? '停用' : '启用' }}
+              </button>
+              <button type="button" @click="handleResetPassword(item.id)">重置密码</button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <footer class="pager">
+        <button type="button" :disabled="state.query.page <= 1" @click="handlePrevPage">上一页</button>
+        <span>第 {{ state.query.page }} / {{ totalPages }} 页</span>
+        <button type="button" :disabled="state.query.page >= totalPages" @click="handleNextPage">下一页</button>
+      </footer>
     </div>
 
-    <aside v-if="state.selectedUser" class="card detail-card">
-      <strong>用户详情</strong>
-      <p>姓名：{{ state.selectedUser.name }}</p>
-      <p>账号：{{ state.selectedUser.username }}</p>
-      <p>权限：{{ state.selectedUser.permissionCodes.join('，') }}</p>
-    </aside>
+    <UserDetailDialog
+      :open="state.selectedUser !== null"
+      :loading="state.detailLoading"
+      :error="state.detailError"
+      :user="state.selectedUser"
+      @close="handleCloseDetail"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { UserRole, UserStatus } from '@/api'
 import { useUsersModule } from './useUsersModule'
+import UserDetailDialog from './UserDetailDialog.vue'
+import { createDefaultUserQuery } from './userQueries'
 
-const { state, hasResults, loadList, loadDetail, changeStatus } = useUsersModule()
+const { state, hasResults, loadList, loadDetail, changeStatus, resetPassword, clearDetail } =
+  useUsersModule()
 
 const keyword = ref('')
+const departmentId = ref('')
 const status = ref<UserStatus | ''>('')
 const role = ref<UserRole | ''>('')
-const departmentId = ref('')
+
+const totalPages = computed(() => Math.max(1, Math.ceil(state.total / state.query.pageSize)))
 
 onMounted(() => {
   void loadList()
@@ -117,13 +135,42 @@ function handleReload(): void {
   void loadList()
 }
 
+function handleResetFilters(): void {
+  keyword.value = ''
+  departmentId.value = ''
+  status.value = ''
+  role.value = ''
+  void loadList(createDefaultUserQuery())
+}
+
 function handleView(id: string): void {
+  clearDetail()
   void loadDetail(id)
 }
 
 function handleToggleStatus(item: { id: string; status: 'active' | 'disabled' }): void {
   const nextStatus = item.status === 'active' ? 'disabled' : 'active'
   void changeStatus(item.id, nextStatus)
+}
+
+function handleResetPassword(id: string): void {
+  const password = window.prompt('请输入新密码', 'ChangeMe123!')
+  if (!password) return
+  void resetPassword(id, password)
+}
+
+function handlePrevPage(): void {
+  if (state.query.page <= 1) return
+  void loadList({ page: state.query.page - 1 })
+}
+
+function handleNextPage(): void {
+  if (state.query.page >= totalPages.value) return
+  void loadList({ page: state.query.page + 1 })
+}
+
+function handleCloseDetail(): void {
+  clearDetail()
 }
 
 function roleLabel(value: string): string {
@@ -157,8 +204,7 @@ function statusLabel(value: string): string {
 
 .page-header,
 .filters,
-.table-card,
-.detail-card {
+.table-card {
   padding: 24px;
 }
 
@@ -167,6 +213,11 @@ function statusLabel(value: string): string {
   justify-content: space-between;
   gap: 20px;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .eyebrow {
@@ -254,9 +305,18 @@ td {
   text-align: left;
 }
 
-.detail-card {
-  display: grid;
+.actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 @media (max-width: 1024px) {

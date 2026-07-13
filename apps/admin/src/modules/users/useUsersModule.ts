@@ -14,7 +14,9 @@ export function useUsersModule() {
     query: createDefaultUserQuery(),
     items: [] as UserSummary[],
     total: 0,
-    selectedUser: null as UserDetail | null
+    selectedUser: null as UserDetail | null,
+    detailLoading: false,
+    detailError: null as string | null
   })
 
   const hasResults = computed(() => state.items.length > 0)
@@ -38,15 +40,15 @@ export function useUsersModule() {
   }
 
   async function loadDetail(id: string): Promise<void> {
-    state.loading = true
-    state.error = null
+    state.detailLoading = true
+    state.detailError = null
 
     try {
       state.selectedUser = await usersApi.detail(id)
     } catch (error) {
-      state.error = error instanceof Error ? error.message : '用户详情加载失败'
+      state.detailError = error instanceof Error ? error.message : '用户详情加载失败'
     } finally {
-      state.loading = false
+      state.detailLoading = false
     }
   }
 
@@ -57,6 +59,12 @@ export function useUsersModule() {
 
   async function resetPassword(id: string, password: string): Promise<void> {
     await usersApi.resetPassword(id, { password })
+    await loadList()
+  }
+
+  function clearDetail(): void {
+    state.selectedUser = null
+    state.detailError = null
   }
 
   return {
@@ -65,6 +73,7 @@ export function useUsersModule() {
     loadList,
     loadDetail,
     changeStatus,
-    resetPassword
+    resetPassword,
+    clearDetail
   }
 }

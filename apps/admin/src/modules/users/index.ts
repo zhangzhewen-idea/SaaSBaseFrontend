@@ -1,4 +1,5 @@
 export { default as UserManagementView } from './UserManagementView.vue'
+export { default as UserDetailDialog } from './UserDetailDialog.vue'
 export * from './useUsersModule'
 export * from './users.types'
 export * from './userQueries'
