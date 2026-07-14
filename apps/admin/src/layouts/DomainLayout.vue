@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 
 import { useAuthStore } from '../modules/auth/auth.store'
 
@@ -28,138 +28,159 @@ function handleLogout(): void {
 </script>
 
 <template>
-  <div class="domain-shell">
-    <aside
-      class="sidebar"
-      aria-label="域导航"
-    >
-      <section>
-        <h2>管理员</h2>
-        <nav>
-          <RouterLink to="/dashboard">工作台</RouterLink>
-          <RouterLink v-if="canShow('tenant:profile:read')" to="/tenant/profile">租户资料</RouterLink>
-          <RouterLink v-if="canShow('tenant:user:read')" to="/users">用户管理</RouterLink>
-          <RouterLink v-if="canShow('tenant:dept:read')" to="/departments">部门管理</RouterLink>
-        </nav>
-      </section>
-    </aside>
+  <el-container class="domain-shell">
+    <el-aside class="sidebar" width="240px">
+      <div class="brand-block">
+        <p class="brand">SaaSBase Admin</p>
+        <p class="desc">租户工作区</p>
+      </div>
 
-    <div class="workspace">
-      <header class="topbar">
-        <div>
+      <el-menu
+        class="nav"
+        :default-active="$route.path"
+        :router="true"
+      >
+        <el-menu-item index="/dashboard">工作台</el-menu-item>
+        <el-menu-item
+          v-if="canShow('tenant:profile:read')"
+          index="/tenant/profile"
+        >
+          租户资料
+        </el-menu-item>
+        <el-menu-item
+          v-if="canShow('tenant:user:read')"
+          index="/users"
+        >
+          用户管理
+        </el-menu-item>
+        <el-menu-item
+          v-if="canShow('tenant:dept:read')"
+          index="/departments"
+        >
+          部门管理
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+
+    <el-container class="workspace">
+      <el-header class="topbar">
+        <div class="title-block">
           <strong>{{ displayName }}</strong>
           <span>{{ roleLabel }} · {{ tenantName || '未获取租户资料' }}</span>
         </div>
-        <button
+        <el-button
           aria-label="退出登录"
+          plain
           @click="handleLogout"
         >
           退出
-        </button>
-      </header>
+        </el-button>
+      </el-header>
 
-      <main class="content">
+      <el-main class="content">
         <RouterView />
-      </main>
-    </div>
-  </div>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <style scoped>
 .domain-shell {
   min-height: 100vh;
-  display: flex;
-  background:
-    radial-gradient(circle at top left, rgba(63, 111, 224, 0.18), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(56, 193, 219, 0.08), transparent 26%),
-    var(--color-bg);
-  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .sidebar {
-  width: 220px;
-  background: linear-gradient(180deg, rgba(14, 25, 44, 0.9), rgba(9, 16, 30, 0.88));
-  border-right: 1px solid var(--color-border);
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  backdrop-filter: blur(18px);
-}
-
-.sidebar h2 {
-  margin: 0 0 16px;
-  color: #f7fbff;
-}
-
-.sidebar nav {
-  display: grid;
-  gap: 8px;
-}
-
-.sidebar a {
-  padding: 12px 14px;
-  border-radius: 12px;
-  color: rgba(235, 242, 255, 0.88);
-  border: 1px solid transparent;
-}
-
-.sidebar a.router-link-active {
-  background: rgba(63, 111, 224, 0.14);
-  color: #f7fbff;
-  border-color: rgba(127, 180, 255, 0.18);
-}
-
-.workspace {
-  flex: 1;
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 24px 18px;
+  border-right: 1px solid var(--color-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+}
+
+.brand-block {
+  padding: 8px 10px 2px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-brand-700);
+}
+
+.desc {
+  margin: 8px 0 0;
+  color: var(--color-text-weak);
+}
+
+.nav {
+  border-right: 0;
+  background: transparent;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at top left, rgba(63, 111, 224, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(56, 193, 219, 0.06), transparent 24%);
 }
 
 .topbar {
-  background: linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
-  border: 1px solid rgba(151, 180, 238, 0.14);
-  border-radius: 24px;
-  padding: 18px 20px;
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: center;
-  box-shadow: 0 24px 72px rgba(2, 8, 20, 0.34);
+  margin: 24px 24px 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 48px rgba(32, 58, 108, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.title-block {
+  min-width: 0;
 }
 
 .topbar strong {
   display: block;
-  color: #f7fbff;
+  color: var(--color-text);
 }
 
 .topbar span {
   font-size: 0.92rem;
-  color: rgba(175, 193, 223, 0.82);
-}
-
-.topbar button {
-  border: 1px solid rgba(159, 187, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f7fbff;
-  border-radius: 12px;
-  min-height: 40px;
-  padding: 0 14px;
+  color: var(--color-text-weak);
 }
 
 .content {
-  flex: 1;
   min-width: 0;
+  padding: 0 24px 24px;
 }
 
 @media (max-width: 960px) {
-  .domain-shell {
+  .domain-shell,
+  .workspace {
     flex-direction: column;
   }
 
   .sidebar {
-    width: 100%;
+    width: 100% !important;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .topbar {
+    margin: 16px 16px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .content {
+    padding: 0 16px 16px;
   }
 }
 </style>

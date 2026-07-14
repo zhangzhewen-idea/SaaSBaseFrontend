@@ -2,11 +2,29 @@
   --color-brand-500: #3f6fe0;
   --color-brand-700: #2952a3;
   --color-brand-950: #0b1f3a;
-  --color-bg: #08101d;
-  --color-surface: #101a2c;
-  --color-border: rgba(151, 180, 238, 0.16);
-  --color-text: #edf4ff;
-  --color-text-weak: #a8b8d3;
+  --color-bg: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-border: rgba(27, 45, 82, 0.12);
+  --color-text: #1f2a37;
+  --color-text-weak: #607089;
   --radius-md: 12px;
-  --font-sans: Inter, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --radius-lg: 20px;
+  --font-sans:
+    Inter, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --el-color-primary: var(--color-brand-500);
+  --el-color-primary-dark-2: var(--color-brand-700);
+  --el-color-primary-light-3: #6e92ea;
+  --el-color-primary-light-5: #95b0ef;
+  --el-color-primary-light-7: #bed0f5;
+  --el-color-primary-light-8: #d7e2fa;
+  --el-color-primary-light-9: #edf2fe;
+  --el-border-radius-base: var(--radius-md);
+  --el-border-radius-large: var(--radius-lg);
+  --el-bg-color: var(--color-surface);
+  --el-bg-color-page: var(--color-bg);
+  --el-text-color-primary: var(--color-text);
+  --el-text-color-regular: var(--color-text);
+  --el-text-color-secondary: var(--color-text-weak);
+  --el-border-color: var(--color-border);
+  --el-border-color-light: rgba(27, 45, 82, 0.08);
 }

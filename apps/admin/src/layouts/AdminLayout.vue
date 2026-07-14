@@ -1,43 +1,60 @@
 <template>
-  <div class="shell">
-    <aside class="sidebar">
-      <div>
+  <el-container class="admin-shell">
+    <el-aside class="sidebar" width="260px">
+      <div class="brand-block">
         <p class="brand">SaaSBase Admin</p>
-        <p class="desc">租户后台工作台</p>
+        <p class="desc">Element Plus 工作台</p>
       </div>
 
-      <nav class="nav">
-        <RouterLink to="/dashboard">工作台</RouterLink>
-        <RouterLink v-if="hasPermission('tenant:profile:read')" to="/tenant/profile">租户资料</RouterLink>
-        <RouterLink to="/users">用户管理</RouterLink>
-        <RouterLink to="/departments">部门管理</RouterLink>
-        <RouterLink to="/files">文件管理</RouterLink>
-        <RouterLink v-if="roleLabel === '平台管理员'" to="/platform/tenants">平台租户</RouterLink>
-      </nav>
+      <el-menu
+        class="nav"
+        :default-active="activePath"
+        :router="true"
+      >
+        <el-menu-item index="/dashboard">工作台</el-menu-item>
+        <el-menu-item
+          v-if="hasPermission('tenant:profile:read')"
+          index="/tenant/profile"
+        >
+          租户资料
+        </el-menu-item>
+        <el-menu-item index="/users">用户管理</el-menu-item>
+        <el-menu-item index="/departments">部门管理</el-menu-item>
+        <el-menu-item index="/files">文件管理</el-menu-item>
+        <el-menu-item
+          v-if="roleLabel === '平台管理员'"
+          index="/platform/tenants"
+        >
+          平台租户
+        </el-menu-item>
+      </el-menu>
 
       <div class="sidebar-footer">
         <span>当前会话</span>
         <strong>{{ sessionLabel }}</strong>
       </div>
-    </aside>
+    </el-aside>
 
-    <main class="content">
-      <header class="topbar card">
-        <div>
+    <el-container class="workspace">
+      <el-header class="topbar">
+        <div class="title-block">
           <p class="eyebrow">Tenant Control Center</p>
           <h1>{{ title }}</h1>
         </div>
-        <div class="topbar-actions">
-          <span class="badge">{{ roleLabel }}</span>
-          <button type="button" @click="handleSignOut">退出登录</button>
-        </div>
-      </header>
 
-      <section class="page">
+        <div class="topbar-actions">
+          <el-tag effect="light">{{ roleLabel }}</el-tag>
+          <el-button type="primary" plain @click="handleSignOut">
+            退出登录
+          </el-button>
+        </div>
+      </el-header>
+
+      <el-main class="content">
         <RouterView />
-      </section>
-    </main>
-  </div>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +68,7 @@ const router = useRouter()
 const { session, signOut, hasPermission } = useAuth()
 
 const title = computed(() => (route.meta.title as string | undefined) ?? '工作台')
+const activePath = computed(() => route.path)
 
 const roleLabel = computed(() => {
   switch (session.value?.role) {
@@ -74,91 +92,89 @@ function handleSignOut(): void {
 </script>
 
 <style scoped>
-.shell {
+.admin-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  background:
-    radial-gradient(circle at top left, rgba(63, 111, 224, 0.18), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(56, 193, 219, 0.08), transparent 26%),
-    var(--color-bg);
+  background: var(--color-bg);
 }
 
 .sidebar {
-  display: grid;
-  gap: 24px;
-  align-content: space-between;
-  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 18px;
   border-right: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgba(14, 25, 44, 0.9), rgba(9, 16, 30, 0.88));
-  backdrop-filter: blur(18px);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+}
+
+.brand-block {
+  padding: 8px 10px 2px;
 }
 
 .brand {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  color: #f7fbff;
+  color: var(--color-brand-700);
 }
 
 .desc {
   margin: 8px 0 0;
-  color: rgba(220, 231, 255, 0.7);
+  color: var(--color-text-weak);
 }
 
 .nav {
-  display: grid;
-  gap: 10px;
+  border-right: 0;
+  background: transparent;
 }
 
-.nav a {
-  padding: 12px 14px;
+.nav :deep(.el-menu-item) {
   border-radius: 12px;
-  color: rgba(235, 242, 255, 0.88);
-  font-weight: 600;
-  border: 1px solid transparent;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  margin-bottom: 6px;
 }
 
-.nav a.router-link-active {
-  background: rgba(63, 111, 224, 0.14);
-  border-color: rgba(127, 180, 255, 0.18);
-  color: #f7fbff;
+.nav :deep(.el-menu-item.is-active) {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
 }
 
 .sidebar-footer {
+  margin-top: auto;
+  padding: 12px 10px 6px;
   display: grid;
   gap: 6px;
-  color: rgba(175, 193, 223, 0.82);
+  color: var(--color-text-weak);
 }
 
 .sidebar-footer strong {
-  color: #f7fbff;
+  color: var(--color-text);
+}
+
+.workspace {
+  background:
+    radial-gradient(circle at top left, rgba(63, 111, 224, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(56, 193, 219, 0.06), transparent 24%);
 }
 
 .content {
-  display: grid;
-  gap: 20px;
-  padding: 28px;
-}
-
-.card {
-  background: linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
-  border: 1px solid rgba(151, 180, 238, 0.14);
-  border-radius: 24px;
-  box-shadow: 0 24px 72px rgba(2, 8, 20, 0.34);
-  backdrop-filter: blur(18px);
+  padding: 24px;
 }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  padding: 22px 24px;
   align-items: center;
+  margin: 0 0 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 48px rgba(32, 58, 108, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.title-block {
+  min-width: 0;
 }
 
 .eyebrow {
@@ -173,7 +189,7 @@ function handleSignOut(): void {
 h1 {
   margin: 0;
   font-size: 1.7rem;
-  color: #f7fbff;
+  color: var(--color-text);
 }
 
 .topbar-actions {
@@ -182,33 +198,17 @@ h1 {
   gap: 12px;
 }
 
-.badge {
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(127, 180, 255, 0.14);
-  color: #7fb4ff;
-  font-weight: 700;
-}
-
-.topbar-actions button {
-  padding: 10px 14px;
-  border: 1px solid rgba(159, 187, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f7fbff;
-  font-weight: 600;
-  border-radius: 12px;
-}
-
 .page {
   min-width: 0;
 }
 
 @media (max-width: 1024px) {
-  .shell {
-    grid-template-columns: 1fr;
+  .admin-shell {
+    flex-direction: column;
   }
 
   .sidebar {
+    width: 100%;
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
   }
