@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils'
+import ElementPlus from 'element-plus'
 import { describe, expect, it } from 'vitest'
 
 import UserDetailDialog from './UserDetailDialog.vue'
@@ -6,6 +7,9 @@ import UserDetailDialog from './UserDetailDialog.vue'
 describe('UserDetailDialog', () => {
   it('shows user detail fields and emits close', async () => {
     const wrapper = mount(UserDetailDialog, {
+      global: {
+        plugins: [ElementPlus]
+      },
       props: {
         open: true,
         loading: false,
@@ -25,6 +29,8 @@ describe('UserDetailDialog', () => {
         }
       }
     })
+
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('alice@example.com')

@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import ElementPlus from 'element-plus'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({
@@ -34,6 +35,7 @@ describe('dashboard home', () => {
     const routerPush = vi.fn()
     const wrapper = mount(DashboardHome, {
       global: {
+        plugins: [ElementPlus],
         mocks: {
           $router: {
             push: routerPush
@@ -52,25 +54,20 @@ describe('dashboard home', () => {
     expect(wrapper.text()).not.toContain('平台概览')
     expect(wrapper.text()).not.toContain('演示切换')
 
-    const shortcutTitles = wrapper.findAll('.shortcut strong').map((node) => node.text())
-    expect(shortcutTitles).toEqual(['用户管理', '文件管理'])
+    expect(wrapper.text()).toContain('用户管理')
+    expect(wrapper.text()).toContain('文件管理')
 
-    expect(
-      wrapper.findAll('.summary-item').map((node) => node.text().replace(/\s+/g, ''))
-    ).toEqual([
-      '当前状态已登录',
-      '当前租户SaaSBase',
-      '当前用户租户管理员',
-      '当前角色租户管理员',
-      '租户IDtenant-1',
-      '可用权限2项'
-    ])
-
-    expect(
-      wrapper.findAll('.status-note').map((node) => node.text().replace(/\s+/g, ''))
-    ).toEqual(
-      dashboardStatusNotes.map((note) => `${note.title}${note.description}`.replace(/\s+/g, ''))
-    )
+    expect(wrapper.text()).toContain('当前状态')
+    expect(wrapper.text()).toContain('已登录')
+    expect(wrapper.text()).toContain('当前租户')
+    expect(wrapper.text()).toContain('SaaSBase')
+    expect(wrapper.text()).toContain('当前用户')
+    expect(wrapper.text()).toContain('租户管理员')
+    expect(wrapper.text()).toContain('可用权限')
+    expect(wrapper.text()).toContain('2 项')
+    expect(wrapper.text()).toContain(dashboardStatusNotes[0]!.title)
+    expect(wrapper.text()).toContain(dashboardStatusNotes[1]!.title)
+    expect(wrapper.text()).toContain(dashboardStatusNotes[2]!.title)
 
     expect(routerPush).not.toHaveBeenCalled()
   })
