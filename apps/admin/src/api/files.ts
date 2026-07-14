@@ -59,3 +59,7 @@ export function createFilesApi(runtime?: ApiRuntime) {
     }
   }
 }
+
+export function resolveFileDisposition(contentType: string): 'inline' | 'attachment' {
+  return ['application/pdf', 'image/png', 'image/jpeg'].includes(contentType) ? 'inline' : 'attachment'
+}

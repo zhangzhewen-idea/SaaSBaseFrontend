@@ -1,6 +1,6 @@
 import { computed, reactive } from 'vue'
 
-import type { PlatformTenantDetail, PlatformTenantPayload, PlatformTenantQuery, PlatformTenantSummary } from '@/api'
+import type { PlatformTenantDetail, PlatformTenantPayload, PlatformTenantQuery, PlatformTenantSummary } from '@/api/platform'
 import { createPlatformApi } from '@/api'
 import { createAdminApiRuntime } from '@/api/runtime'
 
@@ -95,6 +95,14 @@ export function usePlatformTenantsModule(api = platformApi) {
     state.detailError = null
   }
 
+  function validateTenant(payload: PlatformTenantPayload, operatorId: string): string | null {
+    if (!operatorId.trim()) return '请填写操作员 ID'
+    if (!payload.tenantCode.trim()) return '请填写租户编码'
+    if (!payload.tenantName.trim()) return '请填写租户名称'
+    if (!payload.adminUsername.trim()) return '请填写管理员账号'
+    return null
+  }
+
   return {
     state,
     hasResults,
@@ -102,6 +110,7 @@ export function usePlatformTenantsModule(api = platformApi) {
     loadDetail,
     saveTenant,
     updateStatus,
-    clearDetail
+    clearDetail,
+    validateTenant
   }
 }

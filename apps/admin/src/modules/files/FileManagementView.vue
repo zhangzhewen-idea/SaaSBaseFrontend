@@ -2,7 +2,7 @@
   <section class="files-page">
     <header class="hero card">
       <div>
-        <p class="eyebrow">Files</p>
+        <p class="eyebrow">文件管理</p>
         <h2>文件管理</h2>
         <p class="lead">支持上传、列表筛选、详情查看、预览和删除，内容接口仅通过统一入口访问。</p>
       </div>
@@ -112,11 +112,14 @@
 import { computed, onMounted, ref } from 'vue'
 
 import type { FileView } from '@/api'
+import { createFilesApi, resolveFileDisposition } from '@/api'
+import { createAdminApiRuntime } from '@/api/runtime'
 
 import { useFilesModule } from './useFilesModule'
 import { createDefaultFileQuery } from './fileQueries'
 
 const { state, hasResults, loadList, loadDetail, upload, remove, clearDetail } = useFilesModule()
+const filesApi = createFilesApi(createAdminApiRuntime())
 
 const filename = ref('')
 const contentType = ref('')
@@ -157,8 +160,8 @@ function handleView(id: string): void {
 }
 
 function handlePreview(item: FileView): void {
-  const disposition = shouldInlinePreview(item.contentType) ? 'inline' : 'attachment'
-  window.open(`/api/v1/admin/files/${item.id}/content?disposition=${disposition}`, '_blank', 'noopener,noreferrer')
+  const disposition = resolveFileDisposition(item.contentType)
+  window.open(filesApi.contentUrl(item.id, disposition), '_blank', 'noopener,noreferrer')
 }
 
 function handleDelete(id: string): void {
@@ -184,10 +187,6 @@ async function handlePickFile(event: Event): Promise<void> {
   if (target) {
     target.value = ''
   }
-}
-
-function shouldInlinePreview(contentTypeValue: string): boolean {
-  return ['application/pdf', 'image/png', 'image/jpeg'].includes(contentTypeValue)
 }
 
 function formatSize(size: number): string {

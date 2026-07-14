@@ -1,4 +1,4 @@
-import type { PlatformTenantQuery } from '@/api'
+import type { PlatformTenantQuery } from '@/api/platform'
 
 export function createDefaultPlatformTenantQuery(): PlatformTenantQuery {
   return {

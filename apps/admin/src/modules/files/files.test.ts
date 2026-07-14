@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { FileView } from '@/api'
-import { mapFileQuery } from '@/api'
+import { mapFileQuery, resolveFileDisposition } from '@/api'
 import { createDefaultFileQuery } from './fileQueries'
 
 const filesApiMock = {
@@ -69,6 +69,12 @@ describe('files api adapter', () => {
       uploadedFrom: undefined,
       uploadedTo: undefined
     })
+  })
+
+  it('chooses inline preview only for supported content types', () => {
+    expect(resolveFileDisposition('application/pdf')).toBe('inline')
+    expect(resolveFileDisposition('image/png')).toBe('inline')
+    expect(resolveFileDisposition('text/plain')).toBe('attachment')
   })
 })
 

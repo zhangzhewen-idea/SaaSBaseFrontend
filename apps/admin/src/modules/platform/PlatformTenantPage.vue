@@ -146,12 +146,12 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api'
+import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api/platform'
 
 import { usePlatformTenantsModule } from './usePlatformTenantsModule'
 import { createDefaultPlatformTenantQuery } from './platformQueries'
 
-const { state, hasResults, loadList, loadDetail, saveTenant, updateStatus, clearDetail } =
+const { state, hasResults, loadList, loadDetail, saveTenant, updateStatus, clearDetail, validateTenant } =
   usePlatformTenantsModule()
 
 const keyword = ref('')
@@ -217,18 +217,25 @@ function handleCreate(): void {
 }
 
 async function handleSave(): Promise<void> {
+  const payload = {
+    tenantCode: editor.tenantCode.trim(),
+    tenantName: editor.tenantName.trim(),
+    adminUsername: editor.adminUsername.trim(),
+    adminDisplayName: editor.adminDisplayName.trim() || undefined,
+    contactName: editor.contactName.trim() || undefined,
+    contactPhone: editor.contactPhone.trim() || undefined,
+    contactEmail: editor.contactEmail.trim() || undefined,
+    remark: editor.remark.trim() || undefined
+  }
+  const validationError = validateTenant(payload, operatorId.value)
+  if (validationError) {
+    state.actionError = validationError
+    return
+  }
+
   await saveTenant(
     editor.id || null,
-    {
-      tenantCode: editor.tenantCode.trim(),
-      tenantName: editor.tenantName.trim(),
-      adminUsername: editor.adminUsername.trim(),
-      adminDisplayName: editor.adminDisplayName.trim() || undefined,
-      contactName: editor.contactName.trim() || undefined,
-      contactPhone: editor.contactPhone.trim() || undefined,
-      contactEmail: editor.contactEmail.trim() || undefined,
-      remark: editor.remark.trim() || undefined
-    },
+    payload,
     operatorId.value.trim()
   )
 }

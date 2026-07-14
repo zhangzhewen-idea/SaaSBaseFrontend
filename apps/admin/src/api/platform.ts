@@ -2,10 +2,6 @@ import type { PageResponse, ApiRuntime } from '@saasbase/api-client'
 
 import { createAdminHttpClient } from './http'
 
-export interface PlatformTenantStatus {
-  active: boolean
-}
-
 export interface PlatformTenantQuery {
   pageNo: number
   pageSize: number
@@ -69,7 +65,7 @@ export function createPlatformApi(runtime?: ApiRuntime) {
       const { operatorId, ...body } = payload
       return http.put<PlatformTenantDetail>(`/api/v1/platform/tenants/${id}?operatorId=${encodeURIComponent(operatorId)}`, body)
     },
-    updateStatus(id: string, payload: PlatformTenantStatus & { operatorId: string }) {
+    updateStatus(id: string, payload: { active: boolean; operatorId: string }) {
       return http.post<PlatformTenantDetail>(
         `/api/v1/platform/tenants/${id}/${payload.active ? 'enable' : 'disable'}?operatorId=${encodeURIComponent(payload.operatorId)}`
       )

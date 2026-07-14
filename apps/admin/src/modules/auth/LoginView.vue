@@ -75,7 +75,7 @@ const errorMessage = ref('')
 const loading = ref(false)
 
 function resolveDefaultRedirect(session: AuthSession): string {
-  return session.role === 'platform-admin' ? '/platform/overview' : '/tenant/workspace'
+  return session.role === 'platform-admin' ? '/platform/tenants' : '/dashboard'
 }
 
 async function handleSubmit(): Promise<void> {

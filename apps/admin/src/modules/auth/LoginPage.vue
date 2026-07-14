@@ -2,7 +2,7 @@
   <section class="login-page" aria-labelledby="login-title">
     <div class="login-card">
       <p class="login-eyebrow">SaaSBase 管理端</p>
-      <h1 id="login-title">登录到管理控制台</h1>
+      <h1 id="login-title">登录到管理后台</h1>
       <p class="login-hint">请输入真实租户编码、用户名和密码。</p>
 
       <form class="login-form" @submit.prevent="handleSubmit">
