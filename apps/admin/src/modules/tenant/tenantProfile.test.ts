@@ -1,10 +1,16 @@
+import { mount, flushPromises } from '@vue/test-utils'
+import ElementPlus from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { TenantProfileResponse } from '@/api/auth'
+import TenantProfilePage from './TenantProfilePage.vue'
 
-const authApiMock = {
+const authApiMock = vi.hoisted(() => ({
+  login: vi.fn(),
+  refresh: vi.fn(),
+  logout: vi.fn(),
   tenantProfile: vi.fn()
-}
+}))
 
 vi.mock('@/api/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/auth')>()
@@ -16,7 +22,7 @@ vi.mock('@/api/auth', async (importOriginal) => {
 
 async function createTenantProfileModule() {
   const { useTenantProfileModule } = await import('./useTenantProfileModule')
-  return useTenantProfileModule()
+  return useTenantProfileModule(authApiMock as any)
 }
 
 describe('tenant profile module', () => {
@@ -52,5 +58,30 @@ describe('tenant profile module', () => {
 
     expect(module.state.error).toBe('request failed')
     expect(module.state.profile).toBeNull()
+  })
+})
+
+describe('tenant profile page', () => {
+  it('renders the tenant profile content', async () => {
+    authApiMock.tenantProfile.mockResolvedValueOnce({
+      tenantId: 'tenant-1',
+      tenantCode: 'tenant-a',
+      tenantName: 'A 公司',
+      adminUsername: 'alice',
+      adminDisplayName: 'Alice',
+      permissions: ['tenant:profile:read']
+    } satisfies TenantProfileResponse)
+
+    const wrapper = mount(TenantProfilePage, {
+      global: {
+        plugins: [ElementPlus]
+      }
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('租户资料')
+    expect(wrapper.text()).toContain('刷新')
+    expect(wrapper.text()).toContain('可见权限')
   })
 })

@@ -1,15 +1,19 @@
+import { mount } from '@vue/test-utils'
+import ElementPlus from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { FileView } from '@/api'
 import { mapFileQuery, resolveFileDisposition } from '@/api'
 import { createDefaultFileQuery } from './fileQueries'
+import FileManagementView from './FileManagementView.vue'
 
-const filesApiMock = {
+const filesApiMock = vi.hoisted(() => ({
   list: vi.fn(),
   detail: vi.fn(),
   upload: vi.fn(),
-  remove: vi.fn()
-}
+  remove: vi.fn(),
+  contentUrl: vi.fn((id: string, disposition: 'inline' | 'attachment' = 'attachment') => `/files/${id}?disposition=${disposition}`)
+}))
 
 vi.mock('@/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api')>()
@@ -21,7 +25,7 @@ vi.mock('@/api', async (importOriginal) => {
 
 async function createFilesModule() {
   const { useFilesModule } = await import('./useFilesModule')
-  return useFilesModule()
+  return useFilesModule(filesApiMock as any)
 }
 
 describe('files api adapter', () => {
@@ -147,5 +151,26 @@ describe('files module', () => {
     expect(filesApiMock.upload).toHaveBeenCalled()
     expect(filesApiMock.remove).toHaveBeenCalledWith('file-1')
     expect(module.state.detail).toBeNull()
+  })
+})
+
+describe('files page', () => {
+  it('renders the file management page', async () => {
+    filesApiMock.list.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20
+    })
+
+    const wrapper = mount(FileManagementView, {
+      global: {
+        plugins: [ElementPlus]
+      }
+    })
+
+    expect(wrapper.text()).toContain('文件管理')
+    expect(wrapper.text()).toContain('上传文件')
+    expect(wrapper.text()).toContain('文件详情')
   })
 })

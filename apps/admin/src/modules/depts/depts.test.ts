@@ -1,9 +1,30 @@
+import { mount } from '@vue/test-utils'
+import ElementPlus from 'element-plus'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createDefaultDepartmentMemberQuery, createDefaultDepartmentTreeQuery } from './deptQueries'
+import DepartmentManagementView from './DepartmentManagementView.vue'
 import { useDepartmentsModule } from './useDepartmentsModule'
 
 import { mapDepartmentMemberQuery, mapDepartmentTreeQuery } from '@/api'
+
+const departmentsApiMock = {
+  tree: vi.fn(),
+  members: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+  move: vi.fn(),
+  addMembers: vi.fn(),
+  removeMember: vi.fn()
+}
+
+vi.mock('@/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api')>()
+  return {
+    ...actual,
+    createDepartmentsApi: () => departmentsApiMock
+  }
+})
 
 describe('departments api adapter', () => {
   it('creates default tree query', () => {
@@ -187,5 +208,26 @@ describe('departments module', () => {
       parentId: null,
       orderNo: 1
     })
+  })
+})
+
+describe('departments page', () => {
+  it('renders the department management page', () => {
+    departmentsApiMock.tree.mockResolvedValue([])
+    departmentsApiMock.members.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0
+    })
+    const wrapper = mount(DepartmentManagementView, {
+      global: {
+        plugins: [ElementPlus]
+      }
+    })
+
+    expect(wrapper.text()).toContain('部门管理')
+    expect(wrapper.text()).toContain('新增部门')
+    expect(wrapper.text()).toContain('成员列表')
   })
 })

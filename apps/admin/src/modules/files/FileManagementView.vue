@@ -1,115 +1,103 @@
 <template>
   <section class="files-page">
-    <header class="hero card">
-      <div>
-        <p class="eyebrow">文件管理</p>
-        <h2>文件管理</h2>
-        <p class="lead">支持上传、列表筛选、详情查看、预览和删除，内容接口仅通过统一入口访问。</p>
-      </div>
-      <div class="actions">
-        <button type="button" class="ghost" @click="handleReload">刷新</button>
-        <label class="upload">
-          <input type="file" @change="handlePickFile" />
-          <span>上传文件</span>
-        </label>
-      </div>
-    </header>
-
-    <section class="filters card">
-      <label>
-        <span>文件名</span>
-        <input v-model="filename" type="text" placeholder="按文件名搜索" />
-      </label>
-      <label>
-        <span>内容类型</span>
-        <input v-model="contentType" type="text" placeholder="image/png" />
-      </label>
-      <label>
-        <span>开始时间</span>
-        <input v-model="uploadedFrom" type="date" />
-      </label>
-      <label>
-        <span>结束时间</span>
-        <input v-model="uploadedTo" type="date" />
-      </label>
-      <div class="filter-actions">
-        <button type="button" class="ghost" @click="handleReset">重置</button>
-        <button type="button" class="primary" @click="handleSearch">查询</button>
-      </div>
-    </section>
-
-    <section class="card table-card">
-      <div class="table-head">
-        <div>
-          <strong>文件列表</strong>
-          <p>共 {{ state.total }} 条</p>
+    <el-card shadow="never" class="hero-card">
+      <template #header>
+        <div class="hero">
+          <div>
+            <p class="eyebrow">文件管理</p>
+            <h2>文件管理</h2>
+            <p class="lead">支持上传、列表筛选、详情查看、预览和删除，内容接口仅通过统一入口访问。</p>
+          </div>
+          <div class="actions">
+            <el-button @click="handleReload">刷新</el-button>
+            <el-button type="primary" @click="handlePickUpload">上传文件</el-button>
+            <input ref="fileInput" class="hidden-input" type="file" @change="handlePickFile" />
+          </div>
         </div>
+      </template>
+
+      <el-form :model="filters" inline label-position="top" class="filters">
+        <el-form-item label="文件名">
+          <el-input v-model="filters.filename" placeholder="按文件名搜索" clearable />
+        </el-form-item>
+        <el-form-item label="内容类型">
+          <el-input v-model="filters.contentType" placeholder="image/png" clearable />
+        </el-form-item>
+        <el-form-item label="开始时间">
+          <el-date-picker v-model="filters.uploadedFrom" type="date" value-format="YYYY-MM-DD" placeholder="开始时间" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-date-picker v-model="filters.uploadedTo" type="date" value-format="YYYY-MM-DD" placeholder="结束时间" />
+        </el-form-item>
+        <el-form-item class="filter-actions">
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+        </el-form-item>
+      </el-form>
+
+      <el-table :data="state.items" border stripe v-loading="state.loading" class="table">
+        <el-table-column prop="filename" label="文件名" min-width="180" />
+        <el-table-column prop="contentType" label="类型" min-width="160" />
+        <el-table-column label="大小" min-width="120">
+          <template #default="{ row }">{{ formatSize(row.size) }}</template>
+        </el-table-column>
+        <el-table-column prop="uploadedAt" label="上传时间" min-width="180" />
+        <el-table-column label="操作" min-width="220" fixed="right">
+          <template #default="{ row }">
+            <el-space wrap>
+              <el-button link type="primary" @click="handleView(row.id)">详情</el-button>
+              <el-button link type="success" @click="handlePreview(row)">预览</el-button>
+              <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-empty v-if="!state.loading && !state.error && !hasResults" description="暂无文件数据。" />
+      <el-alert v-if="state.error" :title="state.error" type="error" show-icon :closable="false" class="state" />
+
+      <div class="footer">
+        <span>共 {{ state.total }} 条</span>
         <span>第 {{ state.query.pageNo }} / {{ totalPages }} 页</span>
       </div>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        :current-page="state.query.pageNo"
+        :page-size="state.query.pageSize"
+        :total="state.total"
+        @current-change="handlePageChange"
+      />
+    </el-card>
 
-      <p v-if="state.loading" class="state">正在加载文件列表...</p>
-      <p v-else-if="state.error" class="state error">{{ state.error }}</p>
-      <p v-else-if="!hasResults" class="state">暂无文件数据。</p>
-
-      <div v-else class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>文件名</th>
-              <th>类型</th>
-              <th>大小</th>
-              <th>上传时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in state.items" :key="item.id">
-              <td>{{ item.filename }}</td>
-              <td>{{ item.contentType }}</td>
-              <td>{{ formatSize(item.size) }}</td>
-              <td>{{ item.uploadedAt }}</td>
-              <td class="row-actions">
-                <button type="button" @click="handleView(item.id)">详情</button>
-                <button type="button" @click="handlePreview(item)">预览</button>
-                <button type="button" @click="handleDelete(item.id)">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <footer class="pager">
-        <button type="button" :disabled="state.query.pageNo <= 1" @click="handlePrevPage">上一页</button>
-        <button type="button" :disabled="state.query.pageNo >= totalPages" @click="handleNextPage">下一页</button>
-      </footer>
-    </section>
-
-    <section class="card detail-card">
-      <div class="table-head">
-        <div>
+    <el-card shadow="never" class="detail-card">
+      <template #header>
+        <div class="detail-head">
           <strong>文件详情</strong>
-          <p>{{ state.detail?.filename || '选择一条文件查看详情' }}</p>
+          <span>{{ state.detail?.filename || '选择一条文件查看详情' }}</span>
         </div>
-      </div>
+      </template>
 
-      <p v-if="state.detailLoading" class="state">正在加载文件详情...</p>
-      <p v-else-if="state.detailError" class="state error">{{ state.detailError }}</p>
-      <div v-else-if="state.detail" class="detail-grid">
-        <div><span>文件名</span><strong>{{ state.detail.filename }}</strong></div>
-        <div><span>内容类型</span><strong>{{ state.detail.contentType }}</strong></div>
-        <div><span>大小</span><strong>{{ formatSize(state.detail.size) }}</strong></div>
-        <div><span>上传时间</span><strong>{{ state.detail.uploadedAt }}</strong></div>
-        <div><span>上传来源</span><strong>{{ state.detail.uploadedFrom || '-' }}</strong></div>
-        <div><span>上传人</span><strong>{{ state.detail.uploadedBy || '-' }}</strong></div>
-      </div>
+      <el-skeleton v-if="state.detailLoading" animated :rows="4" />
+      <el-alert v-else-if="state.detailError" :title="state.detailError" type="error" show-icon :closable="false" />
+      <el-descriptions v-else-if="state.detail" :column="2" border>
+        <el-descriptions-item label="文件名">{{ state.detail.filename }}</el-descriptions-item>
+        <el-descriptions-item label="内容类型">{{ state.detail.contentType }}</el-descriptions-item>
+        <el-descriptions-item label="大小">{{ formatSize(state.detail.size) }}</el-descriptions-item>
+        <el-descriptions-item label="上传时间">{{ state.detail.uploadedAt }}</el-descriptions-item>
+        <el-descriptions-item label="上传来源">{{ state.detail.uploadedFrom || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="上传人">{{ state.detail.uploadedBy || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <el-empty v-else description="暂无文件详情。" />
 
-      <p v-if="state.actionError" class="state error">{{ state.actionError }}</p>
-    </section>
+      <el-alert v-if="state.actionError" :title="state.actionError" type="error" show-icon :closable="false" class="state" />
+    </el-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { ElMessageBox } from 'element-plus'
 
 import type { FileView } from '@/api'
 import { createFilesApi, resolveFileDisposition } from '@/api'
@@ -121,10 +109,13 @@ import { createDefaultFileQuery } from './fileQueries'
 const { state, hasResults, loadList, loadDetail, upload, remove, clearDetail } = useFilesModule()
 const filesApi = createFilesApi(createAdminApiRuntime())
 
-const filename = ref('')
-const contentType = ref('')
-const uploadedFrom = ref('')
-const uploadedTo = ref('')
+const filters = reactive({
+  filename: '',
+  contentType: '',
+  uploadedFrom: '',
+  uploadedTo: ''
+})
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(state.total / state.query.pageSize)))
 
@@ -135,10 +126,10 @@ onMounted(() => {
 function handleSearch(): void {
   void loadList({
     pageNo: 1,
-    filename: filename.value,
-    contentType: contentType.value,
-    uploadedFrom: uploadedFrom.value,
-    uploadedTo: uploadedTo.value
+    filename: filters.filename,
+    contentType: filters.contentType,
+    uploadedFrom: filters.uploadedFrom,
+    uploadedTo: filters.uploadedTo
   })
 }
 
@@ -147,10 +138,10 @@ function handleReload(): void {
 }
 
 function handleReset(): void {
-  filename.value = ''
-  contentType.value = ''
-  uploadedFrom.value = ''
-  uploadedTo.value = ''
+  filters.filename = ''
+  filters.contentType = ''
+  filters.uploadedFrom = ''
+  filters.uploadedTo = ''
   clearDetail()
   void loadList(createDefaultFileQuery())
 }
@@ -165,18 +156,15 @@ function handlePreview(item: FileView): void {
 }
 
 function handleDelete(id: string): void {
-  if (!window.confirm('确认删除该文件？')) return
-  void remove(id)
+  void ElMessageBox.confirm('确认删除该文件？', '删除文件', { type: 'warning' }).then(() => remove(id))
 }
 
-function handlePrevPage(): void {
-  if (state.query.pageNo <= 1) return
-  void loadList({ pageNo: state.query.pageNo - 1 })
+function handlePageChange(pageNo: number): void {
+  void loadList({ pageNo })
 }
 
-function handleNextPage(): void {
-  if (state.query.pageNo >= totalPages.value) return
-  void loadList({ pageNo: state.query.pageNo + 1 })
+function handlePickUpload(): void {
+  fileInput.value?.click()
 }
 
 async function handlePickFile(event: Event): Promise<void> {
@@ -195,3 +183,87 @@ function formatSize(size: number): string {
   return `${(size / 1024 / 1024).toFixed(1)} MB`
 }
 </script>
+
+<style scoped>
+.files-page {
+  display: grid;
+  gap: 22px;
+}
+
+.hero-card,
+.detail-card {
+  border-radius: 20px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-brand-500);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.lead {
+  margin-top: 10px;
+  color: var(--color-text-weak);
+  line-height: 1.7;
+}
+
+.filters {
+  width: 100%;
+}
+
+.filter-actions {
+  align-self: end;
+}
+
+.table {
+  margin-top: 12px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 8px;
+  color: var(--color-text-weak);
+}
+
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-right: 16px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .actions,
+  .detail-head {
+    display: grid;
+  }
+}
+</style>

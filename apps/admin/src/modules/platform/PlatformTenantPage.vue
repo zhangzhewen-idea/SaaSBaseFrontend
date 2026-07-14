@@ -1,150 +1,133 @@
 <template>
   <section class="page">
-    <header class="hero card">
-      <div>
-        <p class="eyebrow">Platform Tenants</p>
-        <h2>平台租户管理</h2>
-        <p class="lead">维护平台侧租户列表、详情和启停状态，所有写操作都保留 operatorId。</p>
-      </div>
-      <div class="actions">
-        <button type="button" class="ghost" @click="handleReload">刷新</button>
-        <button type="button" class="primary" @click="handleCreate">新增租户</button>
-      </div>
-    </header>
-
-    <section class="filters card">
-      <label>
-        <span>关键字</span>
-        <input v-model="keyword" type="text" placeholder="租户编码 / 租户名称" />
-      </label>
-      <label>
-        <span>状态</span>
-        <select v-model="status">
-          <option value="">全部</option>
-          <option value="active">启用</option>
-          <option value="disabled">停用</option>
-        </select>
-      </label>
-      <label>
-        <span>操作员 ID</span>
-        <input v-model="operatorId" type="text" placeholder="platform-admin" />
-      </label>
-      <div class="filter-actions">
-        <button type="button" class="ghost" @click="handleReset">重置</button>
-        <button type="button" class="primary" @click="handleSearch">查询</button>
-      </div>
-    </section>
-
-    <section class="card table-card">
-      <div class="table-head">
-        <div>
-          <strong>租户列表</strong>
-          <p>共 {{ state.total }} 条</p>
+    <el-card shadow="never" class="hero-card">
+      <template #header>
+        <div class="hero">
+          <div>
+            <p class="eyebrow">Platform Tenants</p>
+            <h2>平台租户管理</h2>
+            <p class="lead">维护平台侧租户列表、详情和启停状态，所有写操作都保留 operatorId。</p>
+          </div>
+          <div class="actions">
+            <el-button @click="handleReload">刷新</el-button>
+            <el-button type="primary" @click="handleCreate">新增租户</el-button>
+          </div>
         </div>
+      </template>
+
+      <el-form :model="filters" inline label-position="top" class="filters">
+        <el-form-item label="关键字">
+          <el-input v-model="filters.keyword" placeholder="租户编码 / 租户名称" clearable />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="filters.status" placeholder="全部" clearable>
+            <el-option label="启用" value="active" />
+            <el-option label="停用" value="disabled" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作员 ID">
+          <el-input v-model="operatorId" placeholder="platform-admin" />
+        </el-form-item>
+        <el-form-item class="filter-actions">
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+        </el-form-item>
+      </el-form>
+
+      <el-table :data="state.items" border stripe v-loading="state.loading" class="table">
+        <el-table-column prop="tenantCode" label="租户编码" min-width="180" />
+        <el-table-column prop="tenantName" label="租户名称" min-width="180" />
+        <el-table-column prop="adminUsername" label="管理员账号" min-width="160" />
+        <el-table-column label="状态" min-width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'active' ? 'success' : 'info'">
+              {{ row.status === 'active' ? '启用' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updatedAt" label="更新时间" min-width="180" />
+        <el-table-column label="操作" min-width="220" fixed="right">
+          <template #default="{ row }">
+            <el-space wrap>
+              <el-button link type="primary" @click="handleView(row.id)">详情</el-button>
+              <el-button link type="warning" @click="handleEdit(row.id)">编辑</el-button>
+              <el-button link type="danger" @click="handleToggle(row)">
+                {{ row.status === 'active' ? '停用' : '启用' }}
+              </el-button>
+            </el-space>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-empty v-if="!state.loading && !state.error && !hasResults" description="暂无平台租户数据。" />
+      <el-alert v-if="state.error" :title="state.error" type="error" show-icon :closable="false" class="state" />
+
+      <div class="footer">
+        <span>共 {{ state.total }} 条</span>
         <span>第 {{ state.query.pageNo }} / {{ totalPages }} 页</span>
       </div>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        :current-page="state.query.pageNo"
+        :page-size="state.query.pageSize"
+        :total="state.total"
+        @current-change="handlePageChange"
+      />
+    </el-card>
 
-      <p v-if="state.loading" class="state">正在加载平台租户列表...</p>
-      <p v-else-if="state.error" class="state error">{{ state.error }}</p>
-      <p v-else-if="!hasResults" class="state">暂无平台租户数据。</p>
-
-      <div v-else class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>租户编码</th>
-              <th>租户名称</th>
-              <th>管理员账号</th>
-              <th>状态</th>
-              <th>更新时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in state.items" :key="item.id">
-              <td>{{ item.tenantCode }}</td>
-              <td>{{ item.tenantName }}</td>
-              <td>{{ item.adminUsername }}</td>
-              <td>{{ item.status === 'active' ? '启用' : '停用' }}</td>
-              <td>{{ item.updatedAt }}</td>
-              <td class="row-actions">
-                <button type="button" @click="handleView(item.id)">详情</button>
-                <button type="button" @click="handleEdit(item.id)">编辑</button>
-                <button type="button" @click="handleToggle(item)">
-                  {{ item.status === 'active' ? '停用' : '启用' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <footer class="pager">
-        <button type="button" :disabled="state.query.pageNo <= 1" @click="handlePrevPage">上一页</button>
-        <button type="button" :disabled="state.query.pageNo >= totalPages" @click="handleNextPage">下一页</button>
-      </footer>
-    </section>
-
-    <section class="card detail-card">
-      <div class="table-head">
-        <div>
+    <el-card shadow="never" class="detail-card">
+      <template #header>
+        <div class="detail-head">
           <strong>{{ editor.id ? '编辑租户' : '新增租户' }}</strong>
-          <p>{{ state.selectedTenant?.tenantCode || '选择一条记录可回填详情' }}</p>
+          <span>{{ state.selectedTenant?.tenantCode || '选择一条记录可回填详情' }}</span>
         </div>
-        <span v-if="state.actionLoading">处理中...</span>
-      </div>
+      </template>
 
-      <p v-if="state.detailLoading" class="state">正在加载租户详情...</p>
-      <p v-else-if="state.detailError" class="state error">{{ state.detailError }}</p>
+      <el-skeleton v-if="state.detailLoading" animated :rows="4" />
+      <el-alert v-else-if="state.detailError" :title="state.detailError" type="error" show-icon :closable="false" />
 
-      <form class="editor" @submit.prevent="handleSave">
-        <label>
-          <span>租户编码</span>
-          <input v-model="editor.tenantCode" type="text" />
-        </label>
-        <label>
-          <span>租户名称</span>
-          <input v-model="editor.tenantName" type="text" />
-        </label>
-        <label>
-          <span>管理员账号</span>
-          <input v-model="editor.adminUsername" type="text" />
-        </label>
-        <label>
-          <span>管理员显示名</span>
-          <input v-model="editor.adminDisplayName" type="text" />
-        </label>
-        <label>
-          <span>联系人</span>
-          <input v-model="editor.contactName" type="text" />
-        </label>
-        <label>
-          <span>联系电话</span>
-          <input v-model="editor.contactPhone" type="text" />
-        </label>
-        <label>
-          <span>联系邮箱</span>
-          <input v-model="editor.contactEmail" type="email" />
-        </label>
-        <label class="full">
-          <span>备注</span>
-          <textarea v-model="editor.remark" rows="3" />
-        </label>
+      <el-form :model="editor" label-position="top" class="editor" @submit.prevent>
+        <el-form-item label="租户编码">
+          <el-input v-model="editor.tenantCode" />
+        </el-form-item>
+        <el-form-item label="租户名称">
+          <el-input v-model="editor.tenantName" />
+        </el-form-item>
+        <el-form-item label="管理员账号">
+          <el-input v-model="editor.adminUsername" />
+        </el-form-item>
+        <el-form-item label="管理员显示名">
+          <el-input v-model="editor.adminDisplayName" />
+        </el-form-item>
+        <el-form-item label="联系人">
+          <el-input v-model="editor.contactName" />
+        </el-form-item>
+        <el-form-item label="联系电话">
+          <el-input v-model="editor.contactPhone" />
+        </el-form-item>
+        <el-form-item label="联系邮箱">
+          <el-input v-model="editor.contactEmail" />
+        </el-form-item>
+        <el-form-item label="备注" class="full">
+          <el-input v-model="editor.remark" type="textarea" :rows="3" />
+        </el-form-item>
         <div class="full editor-actions">
-          <button type="button" class="ghost" @click="handleClearEditor">清空</button>
-          <button type="submit" class="primary" :disabled="state.actionLoading">
+          <el-button @click="handleClearEditor">清空</el-button>
+          <el-button type="primary" :disabled="state.actionLoading" @click="handleSave">
             {{ editor.id ? '保存修改' : '创建租户' }}
-          </button>
+          </el-button>
         </div>
-      </form>
+      </el-form>
 
-      <p v-if="state.actionError" class="state error">{{ state.actionError }}</p>
-    </section>
+      <el-alert v-if="state.actionError" :title="state.actionError" type="error" show-icon :closable="false" class="state" />
+    </el-card>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 
 import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api/platform'
 
@@ -154,8 +137,10 @@ import { createDefaultPlatformTenantQuery } from './platformQueries'
 const { state, hasResults, loadList, loadDetail, saveTenant, updateStatus, clearDetail, validateTenant } =
   usePlatformTenantsModule()
 
-const keyword = ref('')
-const status = ref<'active' | 'disabled' | ''>('')
+const filters = reactive({
+  keyword: '',
+  status: '' as 'active' | 'disabled' | ''
+})
 const operatorId = ref('platform-admin')
 
 const editor = reactive({
@@ -179,8 +164,8 @@ onMounted(() => {
 function handleSearch(): void {
   void loadList({
     pageNo: 1,
-    keyword: keyword.value,
-    status: status.value || undefined
+    keyword: filters.keyword,
+    status: filters.status || undefined
   })
 }
 
@@ -189,8 +174,8 @@ function handleReload(): void {
 }
 
 function handleReset(): void {
-  keyword.value = ''
-  status.value = ''
+  filters.keyword = ''
+  filters.status = ''
   void loadList(createDefaultPlatformTenantQuery())
 }
 
@@ -210,6 +195,7 @@ function handleEdit(id: string): void {
 
 function handleToggle(item: PlatformTenantSummary): void {
   void updateStatus(item.id, item.status !== 'active', operatorId.value)
+    .then(() => ElMessage.success('状态已更新'))
 }
 
 function handleCreate(): void {
@@ -233,25 +219,16 @@ async function handleSave(): Promise<void> {
     return
   }
 
-  await saveTenant(
-    editor.id || null,
-    payload,
-    operatorId.value.trim()
-  )
+  await saveTenant(editor.id || null, payload, operatorId.value.trim())
+  ElMessage.success('租户已保存')
 }
 
 function handleClearEditor(): void {
   clearEditor()
 }
 
-function handlePrevPage(): void {
-  if (state.query.pageNo <= 1) return
-  void loadList({ pageNo: state.query.pageNo - 1 })
-}
-
-function handleNextPage(): void {
-  if (state.query.pageNo >= totalPages.value) return
-  void loadList({ pageNo: state.query.pageNo + 1 })
+function handlePageChange(pageNo: number): void {
+  void loadList({ pageNo })
 }
 
 function fillEditor(detail: PlatformTenantDetail): void {
@@ -279,3 +256,98 @@ function clearEditor(): void {
   clearDetail()
 }
 </script>
+
+<style scoped>
+.page {
+  display: grid;
+  gap: 22px;
+}
+
+.hero-card,
+.detail-card {
+  border-radius: 20px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-brand-500);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.lead {
+  margin-top: 10px;
+  color: var(--color-text-weak);
+  line-height: 1.7;
+}
+
+.filters {
+  width: 100%;
+}
+
+.table {
+  margin-top: 12px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 8px;
+  color: var(--color-text-weak);
+}
+
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+:deep(.el-form--inline .el-form-item) {
+  margin-right: 16px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .actions,
+  .detail-head {
+    display: grid;
+  }
+
+  .editor {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

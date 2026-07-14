@@ -1,18 +1,19 @@
 import { mount } from '@vue/test-utils'
+import ElementPlus from 'element-plus'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api'
 import { mapPlatformTenantListQuery } from '@/api'
-import PlatformOverviewPage from './PlatformOverviewPage.vue'
+import PlatformTenantPage from './PlatformTenantPage.vue'
 import { createDefaultPlatformTenantQuery } from './platformQueries'
 
-const platformApiMock = {
+const platformApiMock = vi.hoisted(() => ({
   list: vi.fn(),
   detail: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   updateStatus: vi.fn()
-}
+}))
 
 vi.mock('@/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api')>()
@@ -24,7 +25,7 @@ vi.mock('@/api', async (importOriginal) => {
 
 async function createPlatformModule() {
   const { usePlatformTenantsModule } = await import('./usePlatformTenantsModule')
-  return usePlatformTenantsModule()
+  return usePlatformTenantsModule(platformApiMock)
 }
 
 describe('platform tenant api adapter', () => {
@@ -194,11 +195,21 @@ describe('platform tenant module', () => {
 })
 
 describe('platform overview page', () => {
-  it('shows the migration note only', () => {
-    const wrapper = mount(PlatformOverviewPage)
+  it('shows the tenant management page', () => {
+    platformApiMock.list.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20
+    })
+    const wrapper = mount(PlatformTenantPage, {
+      global: {
+        plugins: [ElementPlus]
+      }
+    })
 
-    expect(wrapper.text()).toContain('迁移说明')
-    expect(wrapper.text()).not.toContain('演示')
-    expect(wrapper.findAll('button')).toHaveLength(0)
+    expect(wrapper.text()).toContain('平台租户管理')
+    expect(wrapper.text()).toContain('新增租户')
+    expect(wrapper.text()).toContain('租户列表')
   })
 })
