@@ -9,10 +9,10 @@ export type UserRole = 'platform-admin' | 'tenant-admin' | 'tenant-member'
 export interface UserListQuery {
   page: number
   pageSize: number
-  keyword?: string
+  username?: string
   status?: UserStatus
-  role?: UserRole
   departmentId?: string
+  phone?: string
 }
 
 export interface UserSummary {
@@ -24,6 +24,7 @@ export interface UserSummary {
   role: UserRole
   departmentId?: string
   updatedAt: string
+  version?: number
 }
 
 export interface UserDetail extends UserSummary {
@@ -34,38 +35,40 @@ export interface UserDetail extends UserSummary {
 
 export interface UserStatusPayload {
   status: UserStatus
+  version?: number
 }
 
 export interface UserResetPasswordPayload {
   password: string
+  version?: number
 }
 
 export interface UserListRequestQuery extends Record<string, string | number | boolean | null | undefined> {
-  pageNo: number
-  pageSize: number
-  keyword?: string
+  page: number
+  size: number
+  username?: string
   status?: UserStatus
-  role?: UserRole
   departmentId?: string
+  phone?: string
 }
 
 export const DEFAULT_USER_LIST_QUERY: Readonly<UserListQuery> = Object.freeze({
   page: 1,
   pageSize: 20,
-  keyword: '',
+  username: '',
   status: undefined,
-  role: undefined,
-  departmentId: ''
+  departmentId: '',
+  phone: ''
 })
 
 export function mapUserListQuery(query: UserListQuery): UserListRequestQuery {
   return {
-    pageNo: query.page,
-    pageSize: query.pageSize,
-    keyword: query.keyword || undefined,
+    page: query.page,
+    size: query.pageSize,
+    username: query.username || undefined,
     status: query.status,
-    role: query.role,
-    departmentId: query.departmentId || undefined
+    departmentId: query.departmentId || undefined,
+    phone: query.phone || undefined
   }
 }
 
@@ -74,16 +77,20 @@ export function createUsersApi(runtime?: ApiRuntime) {
 
   return {
     list(query: UserListQuery) {
-      return http.get<PageResponse<UserSummary>>('/admin/users', mapUserListQuery(query))
+      return http.get<PageResponse<UserSummary>>('/api/v1/admin/users', mapUserListQuery(query))
     },
     detail(id: string) {
-      return http.get<UserDetail>(`/admin/users/${id}`)
+      return http.get<UserDetail>(`/api/v1/admin/users/${id}`)
     },
     updateStatus(id: string, payload: UserStatusPayload) {
-      return http.patch<UserDetail>(`/admin/users/${id}/status`, payload)
+      return http.post<UserDetail>(`/api/v1/admin/users/${id}/${payload.status === 'active' ? 'enable' : 'disable'}?version=${encodeURIComponent(String(payload.version ?? 1))}`)
     },
     resetPassword(id: string, payload: UserResetPasswordPayload) {
-      return http.post<void>(`/admin/users/${id}/reset-password`, payload)
+      return http.post<void>(`/api/v1/admin/users/${id}/reset-password`, {
+        userId: id,
+        newPassword: payload.password,
+        version: payload.version ?? 1
+      })
     }
   }
 }

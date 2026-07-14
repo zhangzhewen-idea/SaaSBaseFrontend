@@ -6,7 +6,7 @@ body,
 
 body {
   margin: 0;
-  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-sans);
   color: var(--color-text);
   background: var(--color-bg);
 }

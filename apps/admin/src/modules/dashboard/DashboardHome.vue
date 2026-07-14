@@ -4,9 +4,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Tenant Workbench</p>
         <h1>把租户管理放在同一个工作台里</h1>
-        <p class="lead">
-          这里是混合式首页，先看租户状态，再进入用户和部门的日常操作。当前页面使用 demo session 演示完整路由与权限链路。
-        </p>
+        <p class="lead">这里是混合式首页，先看当前租户资料，再进入用户和部门的日常操作。</p>
 
         <div class="hero-actions">
           <button class="primary" type="button" @click="$router.push('/users')">进入用户管理</button>
@@ -15,6 +13,10 @@
       </div>
 
       <aside class="session card">
+        <div class="session-row">
+          <span>当前租户</span>
+          <strong>{{ tenantName }}</strong>
+        </div>
         <div class="session-row">
           <span>当前角色</span>
           <strong>{{ roleLabel }}</strong>
@@ -62,11 +64,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import { dashboardShortcuts, dashboardStats } from './dashboard.data'
-import { useAuth } from '../auth/useAuth'
+import { useAuthStore } from '../auth/auth.store'
 
-const { session } = useAuth()
+const authStore = useAuthStore()
+const { session, tenantName } = storeToRefs(authStore)
 
 const roleLabel = computed(() => {
   switch (session.value?.role) {
@@ -96,10 +100,11 @@ const roleLabel = computed(() => {
 }
 
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  box-shadow: 0 24px 48px rgba(19, 32, 51, 0.06);
+  background: linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
+  border: 1px solid rgba(151, 180, 238, 0.14);
+  border-radius: 24px;
+  box-shadow: 0 24px 72px rgba(2, 8, 20, 0.34);
+  backdrop-filter: blur(18px);
 }
 
 .hero-copy,
@@ -110,7 +115,7 @@ const roleLabel = computed(() => {
 
 .eyebrow {
   margin: 0 0 12px;
-  color: var(--color-brand-500);
+  color: #7fb4ff;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -127,12 +132,13 @@ h1 {
   font-size: clamp(2rem, 4vw, 3.4rem);
   line-height: 1.05;
   max-width: 12ch;
+  color: #f7fbff;
 }
 
 .lead {
   margin-top: 16px;
   max-width: 60ch;
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.74);
   line-height: 1.7;
 }
 
@@ -158,12 +164,13 @@ button {
 
 .primary {
   background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700));
-  color: white;
+  color: #f7fbff;
 }
 
 .secondary {
-  background: #eef3fb;
-  color: var(--color-brand-700);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8efff;
+  border: 1px solid rgba(159, 187, 255, 0.16);
 }
 
 .session {
@@ -176,11 +183,11 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.72);
 }
 
 .session-row strong {
-  color: var(--color-text);
+  color: #f7fbff;
 }
 
 .stats {
@@ -195,7 +202,7 @@ button {
 
 .stat-card p,
 .shortcut span {
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.72);
 }
 
 .stat-card strong {
@@ -215,7 +222,7 @@ button {
 }
 
 .section-title p {
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.72);
 }
 
 .shortcut-grid {
@@ -229,13 +236,14 @@ button {
   gap: 8px;
   padding: 18px;
   text-align: left;
-  background: #f6f8fc;
-  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(159, 187, 255, 0.12);
+  color: #f7fbff;
 }
 
 .shortcut:hover {
-  border-color: var(--color-brand-500);
-  background: #eef3fb;
+  border-color: rgba(127, 180, 255, 0.3);
+  background: rgba(63, 111, 224, 0.12);
 }
 
 @media (max-width: 1024px) {

@@ -8,19 +8,19 @@ const tenantSession: AuthSession = {
   userId: 'tenant-admin',
   displayName: '租户管理员',
   role: 'tenant-admin',
-  permissions: ['tenant:read'],
+  permissions: ['tenant:profile:read'],
 }
 
 describe('resolveAccess', () => {
   it('未登录访问受保护页面时跳转登录', () => {
-    expect(resolveAccess(null, ['platform:read'], '/platform/overview')).toEqual({
+    expect(resolveAccess(null, ['tenant:profile:read'], '/dashboard')).toEqual({
       name: 'login',
-      query: { redirect: '/platform/overview' },
+      query: { redirect: '/dashboard' },
     })
   })
 
   it('权限不匹配时跳转无权限页', () => {
-    expect(resolveAccess(tenantSession, ['platform:read'], '/platform/overview')).toEqual({
+    expect(resolveAccess(tenantSession, ['tenant:dept:read'], '/departments')).toEqual({
       name: 'forbidden',
     })
   })

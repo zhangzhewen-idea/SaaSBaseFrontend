@@ -8,8 +8,7 @@ import { mapDepartmentMemberQuery, mapDepartmentTreeQuery } from '@/api'
 describe('departments api adapter', () => {
   it('creates default tree query', () => {
     expect(createDefaultDepartmentTreeQuery()).toEqual({
-      keyword: '',
-      includeMembers: false
+      keyword: ''
     })
   })
 
@@ -25,12 +24,10 @@ describe('departments api adapter', () => {
   it('maps tree query into request params', () => {
     expect(
       mapDepartmentTreeQuery({
-        keyword: '研发',
-        includeMembers: true
+        keyword: '研发'
       })
     ).toEqual({
-      keyword: '研发',
-      includeMembers: true
+      keyword: '研发'
     })
   })
 
@@ -40,13 +37,15 @@ describe('departments api adapter', () => {
         page: 3,
         pageSize: 10,
         keyword: 'alice',
-        status: 'active'
+        status: 'active',
+        descendants: true
       })
     ).toEqual({
       page: 3,
       pageSize: 10,
       keyword: 'alice',
-      status: 'active'
+      status: 'active',
+      descendants: true
     })
   })
 })
@@ -109,12 +108,13 @@ describe('departments module', () => {
 
     await module.loadTree()
 
-    expect(api.tree).toHaveBeenCalledWith({ keyword: '', includeMembers: false })
+    expect(api.tree).toHaveBeenCalledWith({ keyword: '' })
     expect(api.members).toHaveBeenCalledWith('dept-root', {
       page: 1,
       pageSize: 20,
       keyword: '',
-      status: undefined
+      status: undefined,
+      descendants: false
     })
     expect(module.state.selectedDepartmentId).toBe('dept-root')
     expect(module.state.selectedDepartmentName).toBe('总部')
@@ -138,13 +138,15 @@ describe('departments module', () => {
       page: 1,
       pageSize: 20,
       keyword: '',
-      status: undefined
+      status: undefined,
+      descendants: false
     })
     expect(api.members).toHaveBeenNthCalledWith(2, 'dept-root', {
       page: 1,
       pageSize: 20,
       keyword: '',
-      status: undefined
+      status: undefined,
+      descendants: false
     })
   })
 

@@ -13,7 +13,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        <span>Demo Session</span>
+        <span>当前会话</span>
         <strong>{{ sessionLabel }}</strong>
       </div>
     </aside>
@@ -24,10 +24,10 @@
           <p class="eyebrow">Tenant Control Center</p>
           <h1>{{ title }}</h1>
         </div>
-      <div class="topbar-actions">
-        <span class="badge">{{ roleLabel }}</span>
+        <div class="topbar-actions">
+          <span class="badge">{{ roleLabel }}</span>
           <button type="button" @click="handleSignOut">退出登录</button>
-      </div>
+        </div>
       </header>
 
       <section class="page">
@@ -76,7 +76,8 @@ function handleSignOut(): void {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   background:
-    radial-gradient(circle at top left, rgba(63, 111, 224, 0.12), transparent 30%),
+    radial-gradient(circle at top left, rgba(63, 111, 224, 0.18), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(56, 193, 219, 0.08), transparent 26%),
     var(--color-bg);
 }
 
@@ -86,19 +87,20 @@ function handleSignOut(): void {
   align-content: space-between;
   padding: 28px;
   border-right: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
+  background: linear-gradient(180deg, rgba(14, 25, 44, 0.9), rgba(9, 16, 30, 0.88));
+  backdrop-filter: blur(18px);
 }
 
 .brand {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 800;
+  color: #f7fbff;
 }
 
 .desc {
   margin: 8px 0 0;
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.7);
 }
 
 .nav {
@@ -109,23 +111,29 @@ function handleSignOut(): void {
 .nav a {
   padding: 12px 14px;
   border-radius: 12px;
-  color: var(--color-text);
+  color: rgba(235, 242, 255, 0.88);
   font-weight: 600;
+  border: 1px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .nav a.router-link-active {
-  background: rgba(63, 111, 224, 0.12);
-  color: var(--color-brand-700);
+  background: rgba(63, 111, 224, 0.14);
+  border-color: rgba(127, 180, 255, 0.18);
+  color: #f7fbff;
 }
 
 .sidebar-footer {
   display: grid;
   gap: 6px;
-  color: var(--color-text-weak);
+  color: rgba(175, 193, 223, 0.82);
 }
 
 .sidebar-footer strong {
-  color: var(--color-text);
+  color: #f7fbff;
 }
 
 .content {
@@ -135,10 +143,11 @@ function handleSignOut(): void {
 }
 
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 20px;
-  box-shadow: 0 24px 48px rgba(19, 32, 51, 0.06);
+  background: linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
+  border: 1px solid rgba(151, 180, 238, 0.14);
+  border-radius: 24px;
+  box-shadow: 0 24px 72px rgba(2, 8, 20, 0.34);
+  backdrop-filter: blur(18px);
 }
 
 .topbar {
@@ -151,7 +160,7 @@ function handleSignOut(): void {
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--color-brand-500);
+  color: #7fb4ff;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -161,6 +170,7 @@ function handleSignOut(): void {
 h1 {
   margin: 0;
   font-size: 1.7rem;
+  color: #f7fbff;
 }
 
 .topbar-actions {
@@ -172,16 +182,18 @@ h1 {
 .badge {
   padding: 8px 12px;
   border-radius: 999px;
-  background: #eef3fb;
-  color: var(--color-brand-700);
+  background: rgba(127, 180, 255, 0.14);
+  color: #7fb4ff;
   font-weight: 700;
 }
 
 .topbar-actions button {
   padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  background: white;
+  border: 1px solid rgba(159, 187, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f7fbff;
   font-weight: 600;
+  border-radius: 12px;
 }
 
 .page {

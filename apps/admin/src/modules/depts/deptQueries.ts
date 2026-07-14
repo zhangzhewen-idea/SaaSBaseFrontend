@@ -2,8 +2,7 @@ import type { DepartmentMemberQuery, DepartmentTreeQuery } from '@/api'
 
 export function createDefaultDepartmentTreeQuery(): DepartmentTreeQuery {
   return {
-    keyword: '',
-    includeMembers: false
+    keyword: ''
   }
 }
 

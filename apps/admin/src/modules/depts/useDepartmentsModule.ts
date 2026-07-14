@@ -2,10 +2,11 @@ import { computed, reactive } from 'vue'
 
 import type { DepartmentMember, DepartmentMemberQuery, DepartmentMovePayload, DepartmentNode, DepartmentPayload } from '@/api'
 import { createDepartmentsApi } from '@/api'
+import { createAdminApiRuntime } from '@/api/runtime'
 
 import { createDefaultDepartmentMemberQuery, createDefaultDepartmentTreeQuery } from './deptQueries'
 
-export function useDepartmentsModule(api = createDepartmentsApi()) {
+export function useDepartmentsModule(api = createDepartmentsApi(createAdminApiRuntime())) {
   const state = reactive({
     treeLoading: false,
     memberLoading: false,
@@ -56,7 +57,7 @@ export function useDepartmentsModule(api = createDepartmentsApi()) {
     state.memberQuery = { ...state.memberQuery, ...query }
 
     try {
-      const result = await api.members(id, state.memberQuery)
+      const result = await api.members(id, { ...state.memberQuery, descendants: false })
       state.members = result.items
       state.total = result.total
       state.memberQuery.page = result.page

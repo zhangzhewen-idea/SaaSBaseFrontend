@@ -66,16 +66,17 @@ defineEmits<{
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(11, 31, 58, 0.32);
+  background: rgba(1, 7, 18, 0.58);
   padding: 24px;
+  backdrop-filter: blur(8px);
 }
 
 .dialog {
   width: min(720px, 100%);
-  background: white;
+  background: linear-gradient(180deg, rgba(16, 26, 44, 0.98), rgba(9, 16, 30, 0.96));
   border-radius: 24px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 32px 64px rgba(19, 32, 51, 0.18);
+  border: 1px solid rgba(151, 180, 238, 0.14);
+  box-shadow: 0 32px 72px rgba(2, 8, 20, 0.48);
   padding: 24px;
 }
 
@@ -89,7 +90,7 @@ defineEmits<{
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--color-brand-500);
+  color: #7fb4ff;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -103,11 +104,11 @@ h3 {
 
 .state {
   margin: 0;
-  color: var(--color-text-weak);
+  color: rgba(220, 231, 255, 0.72);
 }
 
 .state.error {
-  color: #b42318;
+  color: #ffb4b4;
 }
 
 .detail dl {
@@ -118,17 +119,19 @@ h3 {
 }
 
 dt {
-  color: var(--color-text-weak);
+  color: rgba(175, 193, 223, 0.9);
   font-weight: 600;
 }
 
 dd {
   margin: 0;
+  color: #f7fbff;
 }
 
 button {
-  border: 1px solid var(--color-border);
-  background: #fff;
+  border: 1px solid rgba(159, 187, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8efff;
   border-radius: 12px;
   min-height: 40px;
   padding: 0 14px;

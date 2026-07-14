@@ -2,10 +2,11 @@ import { computed, reactive } from 'vue'
 
 import type { UserDetail, UserListQuery, UserSummary } from '@/api'
 import { createUsersApi } from '@/api'
+import { createAdminApiRuntime } from '@/api/runtime'
 
 import { createDefaultUserQuery } from './userQueries'
 
-const usersApi = createUsersApi()
+const usersApi = createUsersApi(createAdminApiRuntime())
 
 export function useUsersModule() {
   const state = reactive({
@@ -53,12 +54,14 @@ export function useUsersModule() {
   }
 
   async function changeStatus(id: string, status: UserDetail['status']): Promise<void> {
-    await usersApi.updateStatus(id, { status })
+    const current = state.items.find(item => item.id === id) ?? state.selectedUser
+    await usersApi.updateStatus(id, { status, version: current?.version })
     await loadList()
   }
 
   async function resetPassword(id: string, password: string): Promise<void> {
-    await usersApi.resetPassword(id, { password })
+    const current = state.items.find(item => item.id === id) ?? state.selectedUser
+    await usersApi.resetPassword(id, { password, version: current?.version })
     await loadList()
   }
 

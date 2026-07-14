@@ -2,10 +2,11 @@
   --color-brand-500: #3f6fe0;
   --color-brand-700: #2952a3;
   --color-brand-950: #0b1f3a;
-  --color-bg: #f7f9fc;
-  --color-surface: #ffffff;
-  --color-border: #dbe3f0;
-  --color-text: #132033;
-  --color-text-weak: #5c6d85;
+  --color-bg: #08101d;
+  --color-surface: #101a2c;
+  --color-border: rgba(151, 180, 238, 0.16);
+  --color-text: #edf4ff;
+  --color-text-weak: #a8b8d3;
   --radius-md: 12px;
+  --font-sans: Inter, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
 }

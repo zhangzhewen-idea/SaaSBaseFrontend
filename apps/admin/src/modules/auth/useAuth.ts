@@ -1,34 +1,19 @@
-import { computed, ref } from 'vue'
-
-import type { AuthSession, Permission } from '@saasbase/shared'
+import { storeToRefs } from 'pinia'
+import type { Permission } from '@saasbase/shared'
 import { canAccess } from '@saasbase/shared'
-import {
-  clearCurrentSession,
-  getCurrentSession,
-  getDemoSession,
-  restoreDemoSession,
-  setCurrentSession
-} from './session'
 
-const session = ref<AuthSession | null>(getCurrentSession())
+import { useAuthStore } from './auth.store'
 
 export function useAuth() {
-  const isAuthenticated = computed(() => session.value !== null)
-  const sessionUser = computed(() => session.value)
+  const authStore = useAuthStore()
+  const { session, tenantName, isAuthenticated } = storeToRefs(authStore)
 
-  function signInAsDemo(): void {
-    restoreDemoSession()
-    session.value = getCurrentSession()
+  async function signOut(): Promise<void> {
+    await authStore.logout()
   }
 
-  function signOut(): void {
-    clearCurrentSession()
-    session.value = null
-  }
-
-  function syncSession(nextSession: AuthSession | null): void {
-    setCurrentSession(nextSession)
-    session.value = nextSession
+  function syncSession(): void {
+    // 由 auth store 统一维护
   }
 
   function hasPermission(required: Permission | readonly Permission[] | null | undefined): boolean {
@@ -37,10 +22,8 @@ export function useAuth() {
 
   return {
     session,
-    sessionUser,
+    tenantName,
     isAuthenticated,
-    demoSession: getDemoSession(),
-    signInAsDemo,
     signOut,
     syncSession,
     hasPermission

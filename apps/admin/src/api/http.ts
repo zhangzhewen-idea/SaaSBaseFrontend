@@ -1,5 +1,7 @@
 import type { ApiResponse, ApiRuntime } from '@saasbase/api-client'
 
+import { getAuthorizationHeader } from '../modules/auth/session'
+
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   query?: Record<string, string | number | boolean | null | undefined>
@@ -7,8 +9,9 @@ export interface RequestOptions {
   headers?: Record<string, string>
 }
 
-function buildUrl(baseUrl: string | undefined, path: string, query?: RequestOptions['query']): string {
-  const url = new URL(path, baseUrl ?? 'http://localhost')
+function buildUrl(baseUrl: string, path: string, query?: RequestOptions['query']): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+  const url = baseUrl.startsWith('/') ? new URL(path, origin) : new URL(path, baseUrl)
 
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value === null || value === undefined || value === '') {
@@ -18,14 +21,26 @@ function buildUrl(baseUrl: string | undefined, path: string, query?: RequestOpti
     url.searchParams.set(key, String(value))
   }
 
-  return baseUrl ? url.toString() : `${url.pathname}${url.search}`
+  return url.toString()
+}
+
+function assertBaseUrl(runtime: ApiRuntime | undefined): string {
+  const baseUrl = runtime?.baseUrl?.trim() || import.meta.env.VITE_ADMIN_API_BASE_URL?.trim()
+
+  if (!baseUrl) {
+    throw new Error('请先配置 VITE_ADMIN_API_BASE_URL，再访问管理端接口')
+  }
+
+  return baseUrl
 }
 
 async function request<TData>(runtime: ApiRuntime | undefined, path: string, options: RequestOptions = {}): Promise<TData> {
-  const response = await fetch(buildUrl(runtime?.baseUrl, path, options.query), {
+  const baseUrl = assertBaseUrl(runtime)
+  const response = await fetch(buildUrl(baseUrl, path, options.query), {
     method: options.method ?? 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthorizationHeader(),
       ...runtime?.headers,
       ...options.headers
     },
@@ -34,6 +49,11 @@ async function request<TData>(runtime: ApiRuntime | undefined, path: string, opt
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`)
+  }
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(`接口返回了非 JSON 内容: ${response.status}`)
   }
 
   const payload = (await response.json()) as ApiResponse<TData>
@@ -55,6 +75,9 @@ export function createAdminHttpClient(runtime?: ApiRuntime) {
     },
     patch<TData>(path: string, body?: unknown) {
       return request<TData>(runtime, path, { method: 'PATCH', body })
+    },
+    put<TData>(path: string, body?: unknown) {
+      return request<TData>(runtime, path, { method: 'PUT', body })
     },
     delete<TData>(path: string, body?: unknown) {
       return request<TData>(runtime, path, { method: 'DELETE', body })

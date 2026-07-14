@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
-import { clearCurrentSession, restoreDemoSession, setCurrentSession } from './session'
+import { clearCurrentSession, setCurrentSession } from './session'
 import { resolveAuthRedirect } from './auth.guard'
 
 function createRoute(fullPath: string, requiredPermission?: string): RouteLocationNormalizedLoaded {
@@ -39,9 +39,16 @@ describe('auth guard', () => {
     expect(resolveAuthRedirect(createRoute('/login'))).toBeNull()
   })
 
-  it('allows demo session to enter permitted routes', () => {
-    restoreDemoSession()
-    expect(resolveAuthRedirect(createRoute('/dashboard', 'tenant-dashboard:view'))).toBeNull()
+  it('allows authenticated users with permission to enter permitted routes', () => {
+    setCurrentSession({
+      userId: 'u1',
+      displayName: '租户管理员',
+      role: 'tenant-admin',
+      tenantId: 'tenant-1',
+      permissions: ['tenant:profile:read']
+    })
+
+    expect(resolveAuthRedirect(createRoute('/dashboard', 'tenant:profile:read'))).toBeNull()
   })
 
   it('redirects to forbidden when permission is missing', () => {
@@ -50,9 +57,9 @@ describe('auth guard', () => {
       displayName: '租户成员',
       role: 'tenant-member',
       tenantId: 'tenant-1',
-      permissions: ['tenant-user:view']
+      permissions: ['tenant:user:read']
     })
 
-    expect(resolveAuthRedirect(createRoute('/dashboard', 'tenant-department:view'))).toBe('/forbidden')
+    expect(resolveAuthRedirect(createRoute('/dashboard', 'tenant:dept:read'))).toBe('/forbidden')
   })
 })

@@ -39,18 +39,18 @@ describe('users api adapter', () => {
       mapUserListQuery({
         page: 2,
         pageSize: 20,
-        keyword: 'alice',
+        username: 'alice',
         status: 'active',
-        role: 'tenant-admin',
-        departmentId: 'dept-1'
+        departmentId: 'dept-1',
+        phone: '13800000000'
       })
     ).toEqual({
-      pageNo: 2,
-      pageSize: 20,
-      keyword: 'alice',
+      page: 2,
+      size: 20,
+      username: 'alice',
       status: 'active',
-      role: 'tenant-admin',
-      departmentId: 'dept-1'
+      departmentId: 'dept-1',
+      phone: '13800000000'
     })
   })
 
@@ -60,12 +60,12 @@ describe('users api adapter', () => {
         ...DEFAULT_USER_LIST_QUERY
       })
     ).toEqual({
-      pageNo: 1,
-      pageSize: 20,
-      keyword: undefined,
+      page: 1,
+      size: 20,
+      username: undefined,
       status: undefined,
-      role: undefined,
-      departmentId: undefined
+      departmentId: undefined,
+      phone: undefined
     })
   })
 
@@ -78,10 +78,12 @@ describe('users api adapter', () => {
           id: 'u-1',
           name: 'Alice',
           username: 'alice',
+          phone: '13800000000',
           status: 'active',
           role: 'tenant-admin',
           departmentId: 'dept-1',
-          updatedAt: '2026-07-14 09:00:00'
+          updatedAt: '2026-07-14 09:00:00',
+          version: 1
         } satisfies UserSummary
       ],
       total: 1,
@@ -92,19 +94,19 @@ describe('users api adapter', () => {
     await module.loadList({
       page: 2,
       pageSize: 10,
-      keyword: 'alice',
+      username: 'alice',
       status: 'active',
-      role: 'tenant-admin',
-      departmentId: 'dept-1'
+      departmentId: 'dept-1',
+      phone: '13800000000'
     })
 
     expect(usersApiMock.list).toHaveBeenCalledWith({
       page: 2,
       pageSize: 10,
-      keyword: 'alice',
+      username: 'alice',
       status: 'active',
-      role: 'tenant-admin',
-      departmentId: 'dept-1'
+      departmentId: 'dept-1',
+      phone: '13800000000'
     })
     expect(module.state.items).toHaveLength(1)
     expect(module.state.total).toBe(1)
@@ -126,24 +128,24 @@ describe('users api adapter', () => {
     await module.loadList({
       page: 3,
       pageSize: 20,
-      keyword: 'alice',
+      username: 'alice',
       status: 'active',
-      role: 'tenant-admin',
-      departmentId: 'dept-1'
+      departmentId: 'dept-1',
+      phone: '13800000000'
     })
 
     await module.changeStatus('u-1', 'disabled')
     await module.resetPassword('u-1', 'ChangeMe123!')
 
-    expect(usersApiMock.updateStatus).toHaveBeenCalledWith('u-1', { status: 'disabled' })
-    expect(usersApiMock.resetPassword).toHaveBeenCalledWith('u-1', { password: 'ChangeMe123!' })
+    expect(usersApiMock.updateStatus).toHaveBeenCalledWith('u-1', { status: 'disabled', version: undefined })
+    expect(usersApiMock.resetPassword).toHaveBeenCalledWith('u-1', { password: 'ChangeMe123!', version: undefined })
     expect(usersApiMock.list).toHaveBeenLastCalledWith({
       page: 1,
       pageSize: 20,
-      keyword: 'alice',
+      username: 'alice',
       status: 'active',
-      role: 'tenant-admin',
-      departmentId: 'dept-1'
+      departmentId: 'dept-1',
+      phone: '13800000000'
     })
   })
 
@@ -154,13 +156,15 @@ describe('users api adapter', () => {
       id: 'u-1',
       name: 'Alice',
       username: 'alice',
+      phone: '13800000000',
       status: 'active',
       role: 'tenant-admin',
       departmentId: 'dept-1',
       updatedAt: '2026-07-14 09:00:00',
       email: 'alice@example.com',
       lastLoginAt: '2026-07-14 10:00:00',
-      permissionCodes: ['user:read', 'user:update']
+      permissionCodes: ['tenant:user:read'],
+      version: 1
     } satisfies UserDetail)
 
     await module.loadDetail('u-1')

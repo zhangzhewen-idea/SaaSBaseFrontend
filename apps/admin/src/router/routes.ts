@@ -19,17 +19,17 @@ export const routes: RouteRecordRaw[] = [
       {
         path: 'dashboard',
         component: DashboardHome,
-        meta: { title: '租户工作台', requiredPermission: 'tenant-dashboard:view' }
+        meta: { title: '租户工作台', requiredPermission: 'tenant:profile:read' }
       },
       {
         path: 'users',
         component: UserManagementView,
-        meta: { title: '用户管理', requiredPermission: 'tenant-user:view' }
+        meta: { title: '用户管理', requiredPermission: 'tenant:user:read' }
       },
       {
         path: 'departments',
         component: DepartmentManagementView,
-        meta: { title: '部门管理', requiredPermission: 'tenant-department:view' }
+        meta: { title: '部门管理', requiredPermission: 'tenant:dept:read' }
       },
       {
         path: 'forbidden',

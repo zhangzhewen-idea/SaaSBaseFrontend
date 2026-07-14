@@ -1,5 +1,19 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+
+vi.mock('./auth.service', () => ({
+  login: vi.fn(async () => ({
+    session: {
+      userId: 'u1',
+      displayName: '租户管理员',
+      role: 'tenant-admin',
+      tenantId: 'tenant-1',
+      permissions: ['tenant:profile:read']
+    },
+    tenantName: 'SaaSBase'
+  })),
+  logout: vi.fn(async () => undefined)
+}))
 
 import { useAuthStore } from './auth.store'
 
@@ -8,39 +22,23 @@ describe('useAuthStore', () => {
     setActivePinia(createPinia())
   })
 
-  it('平台管理员登录后建立内存会话', async () => {
+  it('登录后建立会话', async () => {
     const store = useAuthStore()
 
-    await store.login('platform', 'demo123')
-
-    expect(store.isAuthenticated).toBe(true)
-    expect(store.session?.displayName).toBe('平台管理员')
-    expect(store.session?.permissions).toEqual(['platform:read'])
-  })
-
-  it('租户管理员登录后建立内存会话', async () => {
-    const store = useAuthStore()
-
-    await store.login('tenant', 'demo123')
+    await store.login('tenant-a', 'alice', 'pass123')
 
     expect(store.isAuthenticated).toBe(true)
     expect(store.session?.displayName).toBe('租户管理员')
-    expect(store.session?.permissions).toEqual(['tenant:read'])
+    expect(store.session?.permissions).toEqual(['tenant:profile:read'])
   })
 
   it('退出后清空会话', async () => {
     const store = useAuthStore()
 
-    await store.login('platform', 'demo123')
-    store.logout()
+    await store.login('tenant-a', 'alice', 'pass123')
+    await store.logout()
 
     expect(store.isAuthenticated).toBe(false)
     expect(store.session).toBeNull()
-  })
-
-  it('无效账号抛出中文错误', async () => {
-    const store = useAuthStore()
-
-    await expect(store.login('platform', 'wrong')).rejects.toThrow('登录名或密码错误')
   })
 })

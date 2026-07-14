@@ -1,38 +1,65 @@
 import type { AuthSession } from '@saasbase/shared'
 
-type LoginInput = {
+import { createAdminApiRuntime } from '@/api/runtime'
+import { createAuthApi, decodeJwtClaims, type TenantProfileResponse } from '@/api/auth'
+
+import { clearCurrentSession, getRefreshToken, restoreSessionFromClaims, setAuthTokens } from './session'
+
+export interface LoginInput {
+  tenantCode: string
   username: string
   password: string
 }
 
-const ACCOUNTS: Record<string, AuthSession & { password: string }> = {
-  platform: {
-    userId: 'platform-admin',
-    displayName: '平台管理员',
-    role: 'platform-admin',
-    permissions: ['platform:read'],
-    password: 'demo123',
-  },
-  tenant: {
-    userId: 'tenant-admin',
-    displayName: '租户管理员',
-    role: 'tenant-admin',
-    permissions: ['tenant:read'],
-    password: 'demo123',
-  },
+export interface AuthSnapshot {
+  session: AuthSession
+  tenantName: string
 }
 
-export async function login({ username, password }: LoginInput): Promise<AuthSession> {
-  const account = ACCOUNTS[username]
+const authApi = createAuthApi(createAdminApiRuntime())
 
-  if (account === undefined || account.password !== password) {
-    throw new Error('登录名或密码错误')
-  }
+function resolveTenantName(profile: TenantProfileResponse | null): string {
+  return profile?.tenantName ?? profile?.adminDisplayName ?? '未知租户'
+}
+
+export async function login(input: LoginInput): Promise<AuthSnapshot> {
+  const response = await authApi.login(input)
+  setAuthTokens(response.accessToken, response.refreshToken)
+
+  const claims = decodeJwtClaims(response.accessToken)
+  const session = restoreSessionFromClaims(claims)
+  const profile = await authApi.tenantProfile().catch(() => null)
 
   return {
-    userId: account.userId,
-    displayName: account.displayName,
-    role: account.role,
-    permissions: account.permissions,
+    session,
+    tenantName: resolveTenantName(profile)
   }
+}
+
+export async function refreshSession(): Promise<AuthSnapshot | null> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    return null
+  }
+
+  const response = await authApi.refresh(refreshToken)
+  setAuthTokens(response.accessToken, response.refreshToken)
+
+  const claims = decodeJwtClaims(response.accessToken)
+  const session = restoreSessionFromClaims(claims)
+  const profile = await authApi.tenantProfile().catch(() => null)
+
+  return {
+    session,
+    tenantName: resolveTenantName(profile)
+  }
+}
+
+export async function logout(): Promise<void> {
+  const refreshToken = getRefreshToken()
+  if (refreshToken) {
+    await authApi.logout(refreshToken).catch(() => undefined)
+  }
+
+  clearCurrentSession()
 }

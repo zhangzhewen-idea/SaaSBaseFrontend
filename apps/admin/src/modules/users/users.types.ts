@@ -1,13 +1,13 @@
-import type { UserDetail, UserListQuery, UserRole, UserStatus, UserSummary } from '@/api'
+import type { UserDetail, UserListQuery, UserStatus, UserSummary } from '@/api'
 
-export type { UserDetail, UserListQuery, UserRole, UserStatus, UserSummary }
+export type { UserDetail, UserListQuery, UserStatus, UserSummary }
 export type { UserListRequestQuery } from '@/api'
 
 export interface UserListFilters {
-  keyword: string
+  username: string
   status: UserStatus | ''
-  role: UserRole | ''
   departmentId: string
+  phone: string
 }
 
 export interface UserListState {

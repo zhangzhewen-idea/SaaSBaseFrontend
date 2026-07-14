@@ -73,6 +73,41 @@ src/
 - 多租户上下文的传递方式必须以后端已发布契约为准。不得擅自假设 `tenant_id` 参数或 `X-Tenant-Id` 请求头。
 - 平台管理员 API 与租户管理员 API 必须在路由、菜单和调用层清晰分离；前端隐藏入口不是鉴权，后端鉴权始终是最终边界。
 
+### 当前已接入接口
+
+以下接口已在 `apps/admin` 中接入真实后端，并以 `http://localhost:8080` 为开发环境后端地址，通过 Vite 代理转发到 `/api/v1/**`：
+
+| 模块 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 认证 | `POST` | `/api/v1/auth/login` | 登录，提交 `tenantCode`、`username`、`password` |
+| 认证 | `POST` | `/api/v1/auth/refresh` | 刷新令牌，提交 `refreshToken` |
+| 认证 | `POST` | `/api/v1/auth/logout` | 退出登录，提交 `refreshToken`，同时保留 `Authorization` 请求头 |
+| 管理端租户资料 | `GET` | `/api/v1/admin/tenant/profile` | 获取当前租户资料与管理员信息 |
+| 用户管理 | `GET` | `/api/v1/admin/users` | 用户列表，支持 `page`、`size`、`username`、`departmentId`、`status`、`phone` |
+| 用户管理 | `GET` | `/api/v1/admin/users/{userId}` | 用户详情 |
+| 用户管理 | `POST` | `/api/v1/admin/users/{userId}/enable?version=...` | 启用用户 |
+| 用户管理 | `POST` | `/api/v1/admin/users/{userId}/disable?version=...` | 停用用户 |
+| 用户管理 | `POST` | `/api/v1/admin/users/{userId}/reset-password` | 重置密码，提交 `userId`、`newPassword`、`version` |
+| 部门管理 | `GET` | `/api/v1/admin/depts/tree` | 部门树 |
+| 部门管理 | `GET` | `/api/v1/admin/depts/{deptId}` | 部门详情 |
+| 部门管理 | `GET` | `/api/v1/admin/depts/{deptId}/members` | 部门成员，支持 `page`、`pageSize`、`keyword`、`status`、`descendants` |
+| 部门管理 | `POST` | `/api/v1/admin/depts` | 新增部门 |
+| 部门管理 | `PUT` | `/api/v1/admin/depts/{deptId}` | 更新部门 |
+| 部门管理 | `POST` | `/api/v1/admin/depts/{deptId}/move` | 移动部门 |
+| 部门管理 | `POST` | `/api/v1/admin/depts/{deptId}/members` | 添加成员 |
+| 部门管理 | `DELETE` | `/api/v1/admin/depts/{deptId}/members/{memberId}` | 移除成员 |
+| 文件管理 | `POST` | `/api/v1/admin/files` | 文件上传 |
+| 平台租户 | `GET` | `/api/v1/platform/tenants` | 平台租户列表 |
+
+### 认证与权限约定
+
+- 前端以后端返回的 JWT claims 和权限码为准，不再使用演示数据兜底。
+- `Authorization: Bearer <accessToken>` 由统一请求封装自动注入。
+- 主要权限码：
+  - `tenant:profile:read`
+  - `tenant:user:read` / `tenant:user:create` / `tenant:user:update` / `tenant:user:enable` / `tenant:user:disable` / `tenant:user:reset-password`
+  - `tenant:dept:read` / `tenant:dept:create` / `tenant:dept:update` / `tenant:dept:move` / `tenant:dept:enable` / `tenant:dept:disable` / `tenant:dept:delete` / `tenant:dept:member:read`
+
 ## 认证、权限与安全
 
 - 登录、退出、刷新 token、切换租户和权限变更必须通过统一的认证模块处理，业务页面不得自行读写 token。

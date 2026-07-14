@@ -15,7 +15,6 @@ export interface DepartmentNode {
 
 export interface DepartmentTreeQuery {
   keyword?: string
-  includeMembers?: boolean
 }
 
 export interface DepartmentMemberQuery {
@@ -23,6 +22,7 @@ export interface DepartmentMemberQuery {
   pageSize: number
   keyword?: string
   status?: 'active' | 'disabled'
+  descendants?: boolean
 }
 
 export interface DepartmentMember {
@@ -53,17 +53,17 @@ export interface DepartmentMemberPayload {
 
 export function mapDepartmentTreeQuery(query: DepartmentTreeQuery): Record<string, string | boolean> {
   return {
-    keyword: query.keyword ?? '',
-    includeMembers: query.includeMembers ?? false
+    keyword: query.keyword ?? ''
   }
 }
 
-export function mapDepartmentMemberQuery(query: DepartmentMemberQuery): Record<string, string | number> {
+export function mapDepartmentMemberQuery(query: DepartmentMemberQuery): Record<string, string | number | boolean> {
   return {
     page: query.page,
     pageSize: query.pageSize,
     keyword: query.keyword ?? '',
-    status: query.status ?? ''
+    status: query.status ?? '',
+    descendants: query.descendants ?? false
   }
 }
 
@@ -72,28 +72,28 @@ export function createDepartmentsApi(runtime?: ApiRuntime) {
 
   return {
     tree(query: DepartmentTreeQuery = {}) {
-      return http.get<DepartmentNode[]>('/admin/departments/tree', mapDepartmentTreeQuery(query))
+      return http.get<DepartmentNode[]>('/api/v1/admin/depts/tree', mapDepartmentTreeQuery(query))
     },
     detail(id: string) {
-      return http.get<DepartmentNode>(`/admin/departments/${id}`)
+      return http.get<DepartmentNode>(`/api/v1/admin/depts/${id}`)
     },
     members(id: string, query: DepartmentMemberQuery) {
-      return http.get<PageResponse<DepartmentMember>>(`/admin/departments/${id}/members`, mapDepartmentMemberQuery(query))
+      return http.get<PageResponse<DepartmentMember>>(`/api/v1/admin/depts/${id}/members`, mapDepartmentMemberQuery(query))
     },
     create(payload: DepartmentPayload) {
-      return http.post<DepartmentNode>('/admin/departments', payload)
+      return http.post<DepartmentNode>('/api/v1/admin/depts', payload)
     },
     update(id: string, payload: DepartmentPayload) {
-      return http.patch<DepartmentNode>(`/admin/departments/${id}`, payload)
+      return http.put<DepartmentNode>(`/api/v1/admin/depts/${id}`, payload)
     },
     move(id: string, payload: DepartmentMovePayload) {
-      return http.patch<DepartmentNode>(`/admin/departments/${id}/move`, payload)
+      return http.post<DepartmentNode>(`/api/v1/admin/depts/${id}/move`, payload)
     },
     addMembers(id: string, payload: DepartmentMemberPayload) {
-      return http.post<void>(`/admin/departments/${id}/members`, payload)
+      return http.post<void>(`/api/v1/admin/depts/${id}/members`, payload)
     },
     removeMember(id: string, memberId: string) {
-      return http.delete<void>(`/admin/departments/${id}/members/${memberId}`)
+      return http.delete<void>(`/api/v1/admin/depts/${id}/members/${memberId}`)
     }
   }
 }

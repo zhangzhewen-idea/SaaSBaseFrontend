@@ -7,5 +7,13 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
+  },
+  server: {
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
   }
 })

@@ -1,3 +1,5 @@
 export * from './http'
+export * from './auth'
+export * from './runtime'
 export * from './users'
 export * from './depts'
