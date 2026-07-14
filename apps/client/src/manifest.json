@@ -1,0 +1,10 @@
+{
+  "name": "SaaSBase Client Demo",
+  "appid": "__UNI_DEMO_CLIENT__",
+  "description": "SaaSBase 用户端演示应用",
+  "versionName": "0.0.0",
+  "versionCode": "1",
+  "h5": {
+    "title": "SaaSBase 用户端"
+  }
+}
