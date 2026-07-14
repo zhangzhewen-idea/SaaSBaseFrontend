@@ -47,6 +47,7 @@ describe('auth guard', () => {
   it('redirects to forbidden when permission is missing', () => {
     setCurrentSession({
       userId: 'u1',
+      displayName: '租户成员',
       role: 'tenant-member',
       tenantId: 'tenant-1',
       permissions: ['tenant-user:view']

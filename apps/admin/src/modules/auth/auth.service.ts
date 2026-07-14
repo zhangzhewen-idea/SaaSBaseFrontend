@@ -9,14 +9,14 @@ const ACCOUNTS: Record<string, AuthSession & { password: string }> = {
   platform: {
     userId: 'platform-admin',
     displayName: '平台管理员',
-    role: 'platform_admin',
+    role: 'platform-admin',
     permissions: ['platform:read'],
     password: 'demo123',
   },
   tenant: {
     userId: 'tenant-admin',
     displayName: '租户管理员',
-    role: 'tenant_admin',
+    role: 'tenant-admin',
     permissions: ['tenant:read'],
     password: 'demo123',
   },

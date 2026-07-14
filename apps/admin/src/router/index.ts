@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { applyAuthGuard } from '../modules/auth/auth.guard'
+import { syncDocumentTitle } from './routeGuards'
 import './meta'
 import { routes } from './routes'
 
@@ -11,4 +12,8 @@ export const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   applyAuthGuard(to, next)
+})
+
+router.afterEach((to) => {
+  syncDocumentTitle(to)
 })

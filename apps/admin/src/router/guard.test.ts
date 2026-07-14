@@ -7,7 +7,7 @@ import { resolveAccess } from './guard'
 const tenantSession: AuthSession = {
   userId: 'tenant-admin',
   displayName: '租户管理员',
-  role: 'tenant_admin',
+  role: 'tenant-admin',
   permissions: ['tenant:read'],
 }
 

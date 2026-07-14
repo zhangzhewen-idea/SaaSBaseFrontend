@@ -8,7 +8,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const displayName = computed(() => authStore.session?.displayName ?? '未登录')
-const roleLabel = computed(() => authStore.session?.role === 'platform_admin' ? '平台管理员' : authStore.session?.role === 'tenant_admin' ? '租户管理员' : '访客')
+const roleLabel = computed(() => authStore.session?.role === 'platform-admin' ? '平台管理员' : authStore.session?.role === 'tenant-admin' ? '租户管理员' : '访客')
 
 function canShow(permission: 'platform:read' | 'tenant:read'): boolean {
   return authStore.session?.permissions.includes(permission) ?? false

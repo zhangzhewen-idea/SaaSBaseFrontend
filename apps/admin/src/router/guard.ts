@@ -1,13 +1,13 @@
 import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
 import { canAccess } from '@saasbase/shared'
 
-import type { AuthSession } from '@saasbase/shared'
+import type { AuthSession, RequiredPermission } from '@saasbase/shared'
 
 type AccessResult = true | RouteLocationRaw
 
 export function resolveAccess(
   session: AuthSession | null,
-  required: AuthSession extends never ? never : import('@saasbase/shared').Permission[],
+  required: RequiredPermission | null | undefined,
   fullPath: string,
 ): AccessResult {
   if (session === null) {
@@ -19,10 +19,10 @@ export function resolveAccess(
 
 export function createRouteGuard(getSession: () => AuthSession | null) {
   return (to: RouteLocationNormalized) => {
-    if (to.meta.requiresAuth !== true) {
+    if (to.meta.publicAccess === true) {
       return true
     }
 
-    return resolveAccess(getSession(), to.meta.permissions ?? [], to.fullPath)
+    return resolveAccess(getSession(), to.meta.requiredPermission, to.fullPath)
   }
 }

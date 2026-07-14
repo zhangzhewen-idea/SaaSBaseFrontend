@@ -22,6 +22,7 @@ describe('auth session', () => {
   it('can replace the current session', () => {
     setCurrentSession({
       userId: 'u2',
+      displayName: '租户成员',
       role: 'tenant-member',
       tenantId: 'tenant-2',
       permissions: []

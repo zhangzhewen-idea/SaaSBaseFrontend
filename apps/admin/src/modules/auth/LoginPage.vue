@@ -19,7 +19,7 @@ async function handleSubmit(): Promise<void> {
 
   try {
     const session = await authStore.login(username.value, password.value)
-    const targetPath = session.role === 'platform_admin' ? '/platform/overview' : '/tenant/workspace'
+    const targetPath = session.role === 'platform-admin' ? '/platform/overview' : '/tenant/workspace'
 
     await router.push(targetPath)
     ElMessage.success('登录成功')

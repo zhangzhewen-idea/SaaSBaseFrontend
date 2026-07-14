@@ -3,6 +3,7 @@ import { canAccess } from '../../../../../packages/shared/src/index'
 
 const DEMO_SESSION: AuthSession = {
   userId: 'admin-demo',
+  displayName: '租户管理员',
   role: 'tenant-admin',
   tenantId: 'tenant-demo',
   permissions: ['tenant-dashboard:view', 'tenant-user:view', 'tenant-department:view']
