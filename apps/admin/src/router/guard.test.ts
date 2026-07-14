@@ -43,4 +43,14 @@ describe('routes', () => {
     })
     expect(platformOverview?.redirect).toBeUndefined()
   })
+
+  it('exposes the tenant profile page under the admin shell', () => {
+    const adminRoot = routes[1]!
+    const tenantProfile = adminRoot.children?.find(route => route.path === 'tenant/profile')
+
+    expect(tenantProfile?.meta).toMatchObject({
+      title: '租户资料',
+      requiredPermission: 'tenant:profile:read'
+    })
+  })
 })

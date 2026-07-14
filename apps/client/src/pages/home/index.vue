@@ -3,27 +3,52 @@ defineOptions({
   name: 'ClientHomePage',
 })
 
-import { ref } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { clearSession, getSession } from '../../auth/auth.adapter'
-import { ensureClientSession, redirectToLogin } from '../../auth/auth.guard'
-
-type DemoState = 'loading' | 'empty' | 'error' | 'success'
+import { ensureClientSession, navigateToPage, redirectToLogin } from '../../auth/auth.guard'
+import {
+  buildHomeNotices,
+  buildHomeShortcuts,
+  buildHomeSummary,
+  buildHomeTasks,
+  resolveRoleLabel
+} from './home.view-model'
 
 if (!ensureClientSession()) {
   redirectToLogin()
 }
 
-const demoState = ref<DemoState>('success')
-const message = ref('首页已加载')
+onMounted(() => {
+  if (!ensureClientSession()) {
+    redirectToLogin()
+  }
+})
 
-async function loadDemoState(state: DemoState): Promise<void> {
-  demoState.value = state
-  await Promise.resolve()
-  if (state === 'loading') message.value = '正在加载首页'
-  else if (state === 'empty') message.value = '暂无首页内容'
-  else if (state === 'error') message.value = '首页加载失败'
-  else message.value = '首页已加载'
+const session = computed(() => getSession())
+const summaryItems = computed(() => buildHomeSummary(session.value))
+const shortcutItems = computed(() => buildHomeShortcuts(session.value))
+const taskItems = computed(() => buildHomeTasks(session.value))
+const noticeItems = computed(() => buildHomeNotices())
+const roleLabel = computed(() => resolveRoleLabel(session.value))
+
+function handleRefresh(): void {
+  if (!ensureClientSession()) {
+    redirectToLogin()
+  }
+}
+
+function handleShortcut(path: string): void {
+  if (!ensureClientSession()) {
+    redirectToLogin()
+    return
+  }
+
+  if (path === '/pages/home/index') {
+    return
+  }
+
+  navigateToPage(path)
 }
 
 function handleLogout(): void {
@@ -40,49 +65,117 @@ function handleLogout(): void {
       </text>
 
       <view class="profile">
-        <text class="label">当前用户</text>
-        <text class="value">{{ getSession()?.displayName ?? '未登录' }}</text>
-      </view>
-
-      <view class="controls">
-        <button @click="loadDemoState('loading')">
-          加载中
-        </button>
-        <button @click="loadDemoState('empty')">
-          空状态
-        </button>
-        <button @click="loadDemoState('error')">
-          错误
-        </button>
-        <button @click="loadDemoState('success')">
-          正常
-        </button>
-      </view>
-
-      <view v-if="demoState === 'loading'">
-        <text class="message">
-          {{ message }}
+        <text class="label">
+          当前用户
         </text>
-      </view>
-      <view v-else-if="demoState === 'empty'">
-        <text class="message">
-          {{ message }}
-        </text>
-      </view>
-      <view v-else-if="demoState === 'error'">
-        <text class="message">
-          {{ message }}
-        </text>
-      </view>
-      <view v-else>
-        <text class="message">
-          {{ message }}
+        <text class="value">
+          {{ session?.displayName ?? '未登录' }}
         </text>
       </view>
 
-      <button @click="handleLogout">
-        退出
-      </button>
+      <view class="summary">
+        <view
+          v-for="item in summaryItems"
+          :key="item.label"
+          class="summary-item"
+        >
+          <text class="summary-label">
+            {{ item.label }}
+          </text>
+          <text class="summary-value">
+            {{ item.value }}
+          </text>
+        </view>
+      </view>
+
+      <view class="section">
+        <text class="section-title">
+          快捷入口
+        </text>
+        <view class="shortcut-grid">
+          <view
+            v-for="item in shortcutItems"
+            :key="item.title"
+            class="shortcut-item"
+            @click="handleShortcut(item.path)"
+          >
+            <text class="shortcut-title">
+              {{ item.title }}
+            </text>
+            <text class="shortcut-desc">
+              {{ item.description }}
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section">
+        <text class="section-title">
+          待办事项
+        </text>
+        <view class="list">
+          <view
+            v-for="item in taskItems"
+            :key="item.title"
+            class="list-item"
+          >
+            <view class="list-head">
+              <text class="list-title">
+                {{ item.title }}
+              </text>
+              <text class="list-status">
+                {{ item.status }}
+              </text>
+            </view>
+            <text class="list-note">
+              {{ item.note }}
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section">
+        <text class="section-title">
+          公告消息
+        </text>
+        <view class="list">
+          <view
+            v-for="item in noticeItems"
+            :key="item.title"
+            class="list-item"
+          >
+            <view class="list-head">
+              <text class="list-title">
+                {{ item.title }}
+              </text>
+              <text class="list-status">
+                {{ item.time }}
+              </text>
+            </view>
+            <text class="list-note">
+              {{ item.content }}
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <view class="notes">
+        <text class="message">
+          当前角色：{{ roleLabel }}
+        </text>
+        <text class="message">
+          首页已切换为真实会话展示，不再提供演示状态按钮。
+        </text>
+      </view>
+
+      <view class="actions">
+        <button @click="handleRefresh">
+          刷新
+        </button>
+        <button @click="handleLogout">
+          退出
+        </button>
+      </view>
     </view>
   </view>
 </template>
@@ -134,7 +227,97 @@ function handleLogout(): void {
   font-weight: 700;
 }
 
-.controls {
+.summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 24px;
+}
+
+.summary-item {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.summary-label {
+  color: rgba(220, 231, 255, 0.72);
+}
+
+.summary-value {
+  color: #f7fbff;
+  font-weight: 700;
+}
+
+.section {
+  margin-top: 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.section-title {
+  color: #f7fbff;
+  font-weight: 700;
+  font-size: 30rpx;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shortcut-item,
+.list-item {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 22rpx;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shortcut-item {
+  cursor: pointer;
+}
+
+.shortcut-title,
+.list-title {
+  color: #f7fbff;
+  font-weight: 700;
+}
+
+.shortcut-desc,
+.list-note {
+  color: rgba(220, 231, 255, 0.8);
+  line-height: 1.6;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.list-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.list-status {
+  color: #7fb4ff;
+  font-weight: 700;
+}
+
+.notes {
+  margin-top: 24px;
+  display: grid;
+  gap: 10px;
+}
+
+.actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;

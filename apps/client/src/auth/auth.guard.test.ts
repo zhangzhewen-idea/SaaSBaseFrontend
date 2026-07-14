@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { clearSession, getSession, login } from './auth.adapter'
 import { ensureClientSession } from './auth.guard'

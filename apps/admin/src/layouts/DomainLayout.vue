@@ -37,6 +37,7 @@ function handleLogout(): void {
         <h2>管理员</h2>
         <nav>
           <RouterLink to="/dashboard">工作台</RouterLink>
+          <RouterLink v-if="canShow('tenant:profile:read')" to="/tenant/profile">租户资料</RouterLink>
           <RouterLink v-if="canShow('tenant:user:read')" to="/users">用户管理</RouterLink>
           <RouterLink v-if="canShow('tenant:dept:read')" to="/departments">部门管理</RouterLink>
         </nav>

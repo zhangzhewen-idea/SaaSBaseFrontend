@@ -8,6 +8,7 @@
 
       <nav class="nav">
         <RouterLink to="/dashboard">工作台</RouterLink>
+        <RouterLink v-if="hasPermission('tenant:profile:read')" to="/tenant/profile">租户资料</RouterLink>
         <RouterLink to="/users">用户管理</RouterLink>
         <RouterLink to="/departments">部门管理</RouterLink>
         <RouterLink to="/files">文件管理</RouterLink>
@@ -47,7 +48,7 @@ import { useAuth } from '../modules/auth/useAuth'
 
 const route = useRoute()
 const router = useRouter()
-const { session, signOut } = useAuth()
+const { session, signOut, hasPermission } = useAuth()
 
 const title = computed(() => (route.meta.title as string | undefined) ?? '工作台')
 

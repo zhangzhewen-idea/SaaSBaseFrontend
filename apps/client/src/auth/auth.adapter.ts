@@ -18,10 +18,6 @@ function getUniStorage(): UniStorageBridge | null {
 
 let currentSession: AuthSession | null = null
 
-function isStorageAvailable(): boolean {
-  return getUniStorage() !== null
-}
-
 function readStoredSession(): AuthSession | null {
   const storage = getUniStorage()
   if (!storage) {

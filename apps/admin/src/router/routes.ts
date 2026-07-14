@@ -8,6 +8,7 @@ import PlatformTenantPage from '../modules/platform/PlatformTenantPage.vue'
 import FileManagementView from '../modules/files/FileManagementView.vue'
 import { LoginView } from '../modules/auth'
 import { ForbiddenPage, NotFoundPage } from '../modules/system'
+import { TenantProfilePage } from '../modules/tenant'
 
 export const routes: RouteRecordRaw[] = [
   {
@@ -31,6 +32,11 @@ export const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         component: DashboardHome,
         meta: { title: '租户工作台', requiredPermission: 'tenant:profile:read' }
+      },
+      {
+        path: 'tenant/profile',
+        component: TenantProfilePage,
+        meta: { title: '租户资料', requiredPermission: 'tenant:profile:read' }
       },
       {
         path: 'users',
