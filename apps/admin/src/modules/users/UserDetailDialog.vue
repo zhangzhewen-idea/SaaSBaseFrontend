@@ -31,6 +31,12 @@
           <dt>手机号</dt>
           <dd>{{ user.phone ?? '-' }}</dd>
 
+          <dt>邮箱</dt>
+          <dd>{{ user.email ?? '-' }}</dd>
+
+          <dt>最近登录</dt>
+          <dd>{{ user.lastLoginAt ?? '-' }}</dd>
+
           <dt>权限</dt>
           <dd>{{ user.permissionCodes.join('，') || '-' }}</dd>
         </dl>
