@@ -62,6 +62,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import { useAuthStore } from './auth.store'
+import type { AuthSession } from '@saasbase/shared'
 
 const router = useRouter()
 const route = useRoute()
@@ -73,13 +74,17 @@ const password = ref('pass123')
 const errorMessage = ref('')
 const loading = ref(false)
 
+function resolveDefaultRedirect(session: AuthSession): string {
+  return session.role === 'platform-admin' ? '/platform/overview' : '/tenant/workspace'
+}
+
 async function handleSubmit(): Promise<void> {
   errorMessage.value = ''
   loading.value = true
 
   try {
-    await authStore.login(tenantCode.value, username.value, password.value)
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    const session = await authStore.login(tenantCode.value, username.value, password.value)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : resolveDefaultRedirect(session)
     await router.replace(redirect)
     ElMessage.success('登录成功')
   } catch (error) {

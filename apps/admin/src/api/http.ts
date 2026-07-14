@@ -36,15 +36,26 @@ function assertBaseUrl(runtime: ApiRuntime | undefined): string {
 
 async function request<TData>(runtime: ApiRuntime | undefined, path: string, options: RequestOptions = {}): Promise<TData> {
   const baseUrl = assertBaseUrl(runtime)
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+  let requestBody: BodyInit | null | undefined
+
+  if (options.body === undefined) {
+    requestBody = undefined
+  } else if (isFormData) {
+    requestBody = options.body as BodyInit
+  } else {
+    requestBody = JSON.stringify(options.body)
+  }
+
   const response = await fetch(buildUrl(baseUrl, path, options.query), {
     method: options.method ?? 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...getAuthorizationHeader(),
       ...runtime?.headers,
       ...options.headers
     },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body)
+    body: requestBody
   })
 
   if (!response.ok) {

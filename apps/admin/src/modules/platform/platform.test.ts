@@ -1,0 +1,186 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api'
+import { mapPlatformTenantQuery } from '@/api'
+import { createDefaultPlatformTenantQuery } from './platformQueries'
+
+const platformApiMock = {
+  list: vi.fn(),
+  detail: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+  updateStatus: vi.fn()
+}
+
+vi.mock('@/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api')>()
+  return {
+    ...actual,
+    createPlatformApi: () => platformApiMock
+  }
+})
+
+async function createPlatformModule() {
+  const { usePlatformTenantsModule } = await import('./usePlatformTenantsModule')
+  return usePlatformTenantsModule()
+}
+
+describe('platform tenant api adapter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('keeps the default query stable', () => {
+    expect(createDefaultPlatformTenantQuery()).toEqual({
+      pageNo: 1,
+      pageSize: 20,
+      keyword: '',
+      status: undefined
+    })
+  })
+
+  it('maps platform query into request params', () => {
+    expect(
+      mapPlatformTenantQuery({
+        pageNo: 2,
+        pageSize: 10,
+        keyword: 'demo',
+        status: 'active'
+      })
+    ).toEqual({
+      pageNo: 2,
+      pageSize: 10,
+      keyword: 'demo',
+      status: 'active'
+    })
+  })
+
+  it('omits blank filters from the request query', () => {
+    expect(mapPlatformTenantQuery(createDefaultPlatformTenantQuery())).toEqual({
+      pageNo: 1,
+      pageSize: 20,
+      keyword: undefined,
+      status: undefined
+    })
+  })
+})
+
+describe('platform tenant module', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('loads tenants and preserves paging state', async () => {
+    const module = await createPlatformModule()
+
+    platformApiMock.list.mockResolvedValueOnce({
+      items: [
+        {
+          id: 'tenant-1',
+          tenantCode: 'tenant-a',
+          tenantName: 'A 公司',
+          adminUsername: 'alice',
+          status: 'active',
+          updatedAt: '2026-07-14 09:00:00'
+        } satisfies PlatformTenantSummary
+      ],
+      total: 1,
+      page: 2,
+      pageSize: 10
+    })
+
+    await module.loadList({
+      pageNo: 2,
+      pageSize: 10,
+      keyword: 'A',
+      status: 'active'
+    })
+
+    expect(platformApiMock.list).toHaveBeenCalledWith({
+      pageNo: 2,
+      pageSize: 10,
+      keyword: 'A',
+      status: 'active'
+    })
+    expect(module.state.items).toHaveLength(1)
+    expect(module.state.total).toBe(1)
+    expect(module.state.query.pageNo).toBe(2)
+    expect(module.state.query.pageSize).toBe(10)
+    expect(module.hasResults.value).toBe(true)
+  })
+
+  it('loads detail and can clear it', async () => {
+    const module = await createPlatformModule()
+
+    platformApiMock.detail.mockResolvedValueOnce({
+      id: 'tenant-1',
+      tenantCode: 'tenant-a',
+      tenantName: 'A 公司',
+      adminUsername: 'alice',
+      status: 'active',
+      updatedAt: '2026-07-14 09:00:00'
+    } satisfies PlatformTenantDetail)
+
+    await module.loadDetail('tenant-1')
+
+    expect(platformApiMock.detail).toHaveBeenCalledWith('tenant-1')
+    expect(module.state.selectedTenant?.id).toBe('tenant-1')
+
+    module.clearDetail()
+
+    expect(module.state.selectedTenant).toBeNull()
+    expect(module.state.detailError).toBeNull()
+  })
+
+  it('creates, updates and toggles tenants with operator id', async () => {
+    const module = await createPlatformModule()
+
+    platformApiMock.list.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20
+    })
+
+    await module.saveTenant(null, {
+      tenantCode: 'tenant-b',
+      tenantName: 'B 公司',
+      adminUsername: 'bob'
+    }, 'operator-1')
+
+    await module.saveTenant('tenant-1', {
+      tenantCode: 'tenant-a',
+      tenantName: 'A 公司',
+      adminUsername: 'alice'
+    }, 'operator-2')
+
+    await module.updateStatus('tenant-1', false, 'operator-3')
+
+    expect(platformApiMock.create).toHaveBeenCalledWith({
+      tenantCode: 'tenant-b',
+      tenantName: 'B 公司',
+      adminUsername: 'bob',
+      adminDisplayName: undefined,
+      contactName: undefined,
+      contactPhone: undefined,
+      contactEmail: undefined,
+      remark: undefined,
+      operatorId: 'operator-1'
+    })
+    expect(platformApiMock.update).toHaveBeenCalledWith('tenant-1', {
+      tenantCode: 'tenant-a',
+      tenantName: 'A 公司',
+      adminUsername: 'alice',
+      adminDisplayName: undefined,
+      contactName: undefined,
+      contactPhone: undefined,
+      contactEmail: undefined,
+      remark: undefined,
+      operatorId: 'operator-2'
+    })
+    expect(platformApiMock.updateStatus).toHaveBeenCalledWith('tenant-1', {
+      active: false,
+      operatorId: 'operator-3'
+    })
+  })
+})

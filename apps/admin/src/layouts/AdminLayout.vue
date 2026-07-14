@@ -10,6 +10,8 @@
         <RouterLink to="/dashboard">工作台</RouterLink>
         <RouterLink to="/users">用户管理</RouterLink>
         <RouterLink to="/departments">部门管理</RouterLink>
+        <RouterLink to="/files">文件管理</RouterLink>
+        <RouterLink v-if="roleLabel === '平台管理员'" to="/platform/tenants">平台租户</RouterLink>
       </nav>
 
       <div class="sidebar-footer">
