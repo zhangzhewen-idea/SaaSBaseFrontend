@@ -20,13 +20,12 @@ export const routes: RouteRecordRaw[] = [
     children: [
       {
         path: 'tenant/workspace',
-        component: DashboardHome,
-        meta: { title: '租户工作台', requiredPermission: 'tenant:profile:read' }
+        redirect: '/dashboard'
       },
       {
         path: 'platform/overview',
-        component: PlatformTenantPage,
-        meta: { title: '平台概览', requiredPermission: 'platform:tenant:read' }
+        component: () => import('../modules/platform/PlatformOverviewPage.vue'),
+        meta: { title: '平台概览', publicAccess: true }
       },
       {
         path: 'dashboard',

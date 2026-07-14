@@ -1,7 +1,9 @@
+import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { PlatformTenantDetail, PlatformTenantSummary } from '@/api'
-import { mapPlatformTenantQuery } from '@/api'
+import { mapPlatformTenantListQuery } from '@/api'
+import PlatformOverviewPage from './PlatformOverviewPage.vue'
 import { createDefaultPlatformTenantQuery } from './platformQueries'
 
 const platformApiMock = {
@@ -41,25 +43,33 @@ describe('platform tenant api adapter', () => {
 
   it('maps platform query into request params', () => {
     expect(
-      mapPlatformTenantQuery({
+      mapPlatformTenantListQuery({
         pageNo: 2,
         pageSize: 10,
-        keyword: 'demo',
-        status: 'active'
+        tenantName: 'demo',
+        tenantCode: 'code-a',
+        status: 'enabled'
       })
     ).toEqual({
       pageNo: 2,
       pageSize: 10,
-      keyword: 'demo',
-      status: 'active'
+      tenantName: 'demo',
+      tenantCode: 'code-a',
+      status: 'enabled'
     })
   })
 
   it('omits blank filters from the request query', () => {
-    expect(mapPlatformTenantQuery(createDefaultPlatformTenantQuery())).toEqual({
+    expect(mapPlatformTenantListQuery({
       pageNo: 1,
       pageSize: 20,
-      keyword: undefined,
+      tenantName: '',
+      tenantCode: ''
+    })).toEqual({
+      pageNo: 1,
+      pageSize: 20,
+      tenantName: undefined,
+      tenantCode: undefined,
       status: undefined
     })
   })
@@ -79,8 +89,7 @@ describe('platform tenant module', () => {
           id: 'tenant-1',
           tenantCode: 'tenant-a',
           tenantName: 'A 公司',
-          adminUsername: 'alice',
-          status: 'active',
+          status: 'enabled',
           updatedAt: '2026-07-14 09:00:00'
         } satisfies PlatformTenantSummary
       ],
@@ -116,8 +125,7 @@ describe('platform tenant module', () => {
       id: 'tenant-1',
       tenantCode: 'tenant-a',
       tenantName: 'A 公司',
-      adminUsername: 'alice',
-      status: 'active',
+      status: 'enabled',
       updatedAt: '2026-07-14 09:00:00'
     } satisfies PlatformTenantDetail)
 
@@ -182,5 +190,15 @@ describe('platform tenant module', () => {
       active: false,
       operatorId: 'operator-3'
     })
+  })
+})
+
+describe('platform overview page', () => {
+  it('shows the migration note only', () => {
+    const wrapper = mount(PlatformOverviewPage)
+
+    expect(wrapper.text()).toContain('迁移说明')
+    expect(wrapper.text()).not.toContain('演示')
+    expect(wrapper.findAll('button')).toHaveLength(0)
   })
 })

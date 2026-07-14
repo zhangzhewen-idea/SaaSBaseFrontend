@@ -1,120 +1,117 @@
 <template>
-  <section class="dashboard">
-    <div class="hero card">
-      <div class="hero-copy">
-        <p class="eyebrow">Tenant Workbench</p>
-        <h1>把租户管理放在同一个工作台里</h1>
-        <p class="lead">这里是混合式首页，先看当前租户资料，再进入用户和部门的日常操作。</p>
-
-        <div class="hero-actions">
-          <button class="primary" type="button" @click="$router.push('/users')">进入用户管理</button>
-          <button class="secondary" type="button" @click="$router.push('/departments')">进入部门管理</button>
+  <section class="dashboard-home">
+    <section class="panel summary-panel card">
+      <header class="panel-head">
+        <div>
+          <p class="eyebrow">Session Summary</p>
+          <h1>会话摘要</h1>
         </div>
+        <p class="lead">先确认当前身份、租户和权限，再进入后续操作。</p>
+      </header>
+
+      <div class="summary-grid">
+        <article v-for="item in sessionSummary" :key="item.label" class="summary-item">
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+        </article>
       </div>
+    </section>
 
-      <aside class="session card">
-        <div class="session-row">
-          <span>当前租户</span>
-          <strong>{{ tenantName }}</strong>
+    <section class="panel shortcut-panel card">
+      <header class="panel-head">
+        <div>
+          <p class="eyebrow">Quick Links</p>
+          <h2>快捷入口</h2>
         </div>
-        <div class="session-row">
-          <span>当前角色</span>
-          <strong>{{ roleLabel }}</strong>
-        </div>
-        <div class="session-row">
-          <span>租户 ID</span>
-          <strong>{{ session?.tenantId ?? '未分配' }}</strong>
-        </div>
-        <div class="session-row">
-          <span>权限数量</span>
-          <strong>{{ session?.permissions.length ?? 0 }}</strong>
-        </div>
-      </aside>
-    </div>
+        <p class="lead">只展示当前会话可访问的主链路，未授权入口不会出现。</p>
+      </header>
 
-    <div class="stats">
-      <article v-for="stat in dashboardStats" :key="stat.label" class="card stat-card">
-        <p>{{ stat.label }}</p>
-        <strong>{{ stat.value }}</strong>
-        <span>{{ stat.note }}</span>
-      </article>
-    </div>
-
-    <div class="shortcuts card">
-      <div class="section-title">
-        <h2>快捷入口</h2>
-        <p>所有入口都绑定了权限判断，未登录会跳到登录页，缺权限会进入无权限页。</p>
-      </div>
-
-      <div class="shortcut-grid">
+      <div v-if="visibleShortcuts.length" class="shortcut-grid">
         <button
-          v-for="item in dashboardShortcuts"
+          v-for="item in visibleShortcuts"
           :key="item.title"
           class="shortcut"
           type="button"
-          @click="$router.push(item.path)"
+          @click="handleNavigate(item.path)"
         >
           <strong>{{ item.title }}</strong>
           <span>{{ item.description }}</span>
         </button>
       </div>
-    </div>
+
+      <p v-else class="empty-state">当前会话没有可用入口。</p>
+    </section>
+
+    <section class="panel status-panel card">
+      <header class="panel-head">
+        <div>
+          <p class="eyebrow">Status Notes</p>
+          <h2>状态说明</h2>
+        </div>
+        <p class="lead">首页只保留必要信息，避免把平台侧总览和演示功能塞回入口页。</p>
+      </header>
+
+      <div class="status-list">
+        <article v-for="note in dashboardStatusNotes" :key="note.title" class="status-note">
+          <strong>{{ note.title }}</strong>
+          <p>{{ note.description }}</p>
+        </article>
+      </div>
+    </section>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
-import { dashboardShortcuts, dashboardStats } from './dashboard.data'
-import { useAuthStore } from '../auth/auth.store'
+import { useAuth } from '../auth/useAuth'
+import {
+  dashboardStatusNotes,
+  getDashboardSessionSummary,
+  getVisibleDashboardShortcuts
+} from './dashboard.data'
 
-const authStore = useAuthStore()
-const { session, tenantName } = storeToRefs(authStore)
+const router = useRouter()
+const { session, tenantName } = useAuth()
 
-const roleLabel = computed(() => {
-  switch (session.value?.role) {
-    case 'platform-admin':
-      return '平台管理员'
-    case 'tenant-admin':
-      return '租户管理员'
-    case 'tenant-member':
-      return '租户成员'
-    default:
-      return '未登录'
-  }
-})
+const sessionSummary = computed(() => getDashboardSessionSummary(session.value, tenantName.value))
+const visibleShortcuts = computed(() => getVisibleDashboardShortcuts(session.value))
+
+function handleNavigate(path: string): void {
+  void router.push(path)
+}
 </script>
 
 <style scoped>
-.dashboard {
+.dashboard-home {
   display: grid;
-  gap: 24px;
-}
-
-.hero {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
-  align-items: stretch;
+  gap: 20px;
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
+  background:
+    radial-gradient(circle at top right, rgba(79, 128, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(16, 26, 44, 0.94), rgba(9, 16, 30, 0.92));
   border: 1px solid rgba(151, 180, 238, 0.14);
   border-radius: 24px;
   box-shadow: 0 24px 72px rgba(2, 8, 20, 0.34);
   backdrop-filter: blur(18px);
 }
 
-.hero-copy,
-.session,
-.shortcuts {
+.panel {
+  display: grid;
+  gap: 20px;
   padding: 28px;
 }
 
+.panel-head {
+  display: grid;
+  gap: 10px;
+}
+
 .eyebrow {
-  margin: 0 0 12px;
+  margin: 0;
   color: #7fb4ff;
   font-size: 0.78rem;
   font-weight: 700;
@@ -129,106 +126,52 @@ p {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-size: clamp(2rem, 4vw, 3.3rem);
   line-height: 1.05;
-  max-width: 12ch;
+  color: #f7fbff;
+}
+
+h2 {
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
   color: #f7fbff;
 }
 
 .lead {
-  margin-top: 16px;
-  max-width: 60ch;
+  max-width: 62ch;
   color: rgba(220, 231, 255, 0.74);
   line-height: 1.7;
 }
 
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
+.summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-button {
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  font: inherit;
+.summary-item {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(159, 187, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.primary,
-.secondary {
-  padding: 12px 18px;
-  font-weight: 700;
+.summary-item span {
+  color: rgba(220, 231, 255, 0.68);
+  font-size: 0.92rem;
 }
 
-.primary {
-  background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700));
+.summary-item strong {
   color: #f7fbff;
-}
-
-.secondary {
-  background: rgba(255, 255, 255, 0.04);
-  color: #e8efff;
-  border: 1px solid rgba(159, 187, 255, 0.16);
-}
-
-.session {
-  display: grid;
-  gap: 16px;
-  align-content: center;
-}
-
-.session-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  color: rgba(220, 231, 255, 0.72);
-}
-
-.session-row strong {
-  color: #f7fbff;
-}
-
-.stats {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.stat-card {
-  padding: 22px;
-}
-
-.stat-card p,
-.shortcut span {
-  color: rgba(220, 231, 255, 0.72);
-}
-
-.stat-card strong {
-  display: block;
-  margin: 12px 0 8px;
-  font-size: 1.6rem;
-}
-
-.shortcuts {
-  display: grid;
-  gap: 20px;
-}
-
-.section-title {
-  display: grid;
-  gap: 6px;
-}
-
-.section-title p {
-  color: rgba(220, 231, 255, 0.72);
+  font-size: 1.06rem;
+  line-height: 1.4;
 }
 
 .shortcut-grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .shortcut {
@@ -236,21 +179,63 @@ button {
   gap: 8px;
   padding: 18px;
   text-align: left;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
   border: 1px solid rgba(159, 187, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
   color: #f7fbff;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.shortcut strong {
+  font-size: 1rem;
+}
+
+.shortcut span {
+  color: rgba(220, 231, 255, 0.72);
+  line-height: 1.6;
 }
 
 .shortcut:hover {
   border-color: rgba(127, 180, 255, 0.3);
   background: rgba(63, 111, 224, 0.12);
+  transform: translateY(-1px);
 }
 
-@media (max-width: 1024px) {
-  .hero,
-  .stats,
-  .shortcut-grid {
-    grid-template-columns: 1fr;
-  }
+.status-list {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.status-note {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(159, 187, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.status-note strong {
+  color: #f7fbff;
+}
+
+.status-note p,
+.empty-state {
+  color: rgba(220, 231, 255, 0.72);
+  line-height: 1.7;
+}
+
+.empty-state {
+  padding: 6px 2px 0;
+}
+
+button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
 }
 </style>
