@@ -32,6 +32,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@saasbase/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@saasbase/shared':
         specifier: workspace:*
         version: link:../../packages/shared
